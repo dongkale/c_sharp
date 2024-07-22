@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Product Id="*" Name="MyFirstInstall" Language="1033" Version="1.0.0.0" Manufacturer="YourCompany" UpgradeCode="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate />
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="MyFirstInstall" />
+      </Directory>
+    </Directory>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="MainExecutable" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">
+        <File Source="..\bin\Debug\net8.0\MyApp.exe" />
+        <File Source="..\bin\Debug\net8.0\MyApp.dll" />        
+        <File Source="..\bin\Debug\net8.0\MyApp.pdb" />
+        <File Source="..\bin\Debug\net8.0\MyApp.runtimeconfig.json" />
+        <File Source="..\bin\Debug\net8.0\MyApp.deps.json" />
+      </Component>
+    </DirectoryRef>
+    <Feature Id="ProductFeature" Title="MyFirstInstall" Level="1">
+      <ComponentRef Id="MainExecutable" />
+    </Feature>
+  </Product>
+</Wix>
