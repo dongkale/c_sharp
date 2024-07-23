@@ -1,16 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Product Id="*" Name="MyFirstInstall" Language="1033" Version="1.0.0.0" Manufacturer="YourCompany" UpgradeCode="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">
+  <Product Id="*" Name="MyFirstInstall" Language="1033" Version="1.0.0.0" Manufacturer="Lennon" UpgradeCode="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
+
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
     <MediaTemplate />
+
+    <Feature Id="ProductFeature" Title="MyFirstInstall" Level="1">
+      <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="ApplicationUninstall" />
+    </Feature>
+
+    <!-- Directory structure -->
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFilesFolder">
         <Directory Id="INSTALLFOLDER" Name="MyFirstInstall" />
       </Directory>
+      <Directory Id="DesktopFolder" />
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="MyFirstInstall" />
+      </Directory>
     </Directory>
+
+    <!-- Main executable component -->
     <DirectoryRef Id="INSTALLFOLDER">
-      <Component Id="MainExecutable" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">
+      <Component Id="MainExecutable" Directory="INSTALLFOLDER" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">
         <File Source="..\bin\Debug\net8.0\MyApp.exe" />
         <File Source="..\bin\Debug\net8.0\MyApp.dll" />        
         <File Source="..\bin\Debug\net8.0\MyApp.pdb" />
@@ -18,8 +35,65 @@
         <File Source="..\bin\Debug\net8.0\MyApp.deps.json" />
       </Component>
     </DirectoryRef>
-    <Feature Id="ProductFeature" Title="MyFirstInstall" Level="1">
-      <ComponentRef Id="MainExecutable" />
-    </Feature>
+
+    <!-- Shortcut component for Start Menu -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb471">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="MyApp"
+                  Description="My Application"
+                  Target="[INSTALLFOLDER]MyApp.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\MyApp" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Shortcut component -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb472">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="MyFirstInstall"
+                  Description="My Application"
+                  Target="[INSTALLFOLDER]MyApp.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <Shortcut Id="UninstallShortcut"
+                Name="Uninstall Lennon Software"
+                Description="Uninstalls Lennon Software"
+                Target="[SystemFolder]msiexec.exe"
+                Arguments="/x [ProductCode]" />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\MyFirstInstall" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Desktop shortcut -->
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb474">
+        <Shortcut Id="DesktopShortcut"
+                  Name="MyFirstInstall"
+                  Description="My Application"
+                  Target="[INSTALLFOLDER]MyApp.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="DesktopFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\MyFirstInstall" Name="desktopInstalled" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Uninstall entry -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="ApplicationUninstall" Directory="INSTALLFOLDER" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb473">
+        <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\MyFirstInstall">
+          <RegistryValue Name="DisplayName" Value="MyFirstInstall" Type="string" />
+          <RegistryValue Name="UninstallString" Value="[SystemFolder]msiexec.exe /x [ProductCode]" Type="string" />
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+
+    <!-- UI for installation -->
+    <!-- <UI>
+      <UIRef Id="WixUI_InstallDir" />
+      <UIRef Id="WixUI_ErrorProgressText" />
+    </UI> -->
   </Product>
 </Wix>

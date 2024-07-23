@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Product Id="*" Name="MyDlgInstall" Language="1033" Version="1.0.0.0" Manufacturer="Lennon" UpgradeCode="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Manufacturer="Lennon Company" Description="Installs Lennon Software" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate />
+
+    <!-- Directory structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="MyProgramDir" Name="Lennon Software" />
+        <Directory Id="DesktopFolder" />
+        <Directory Id="ProgramMenuFolder">
+          <Directory Id="MyShortcutsDir" Name="Lennon Software" />
+        </Directory>
+      </Directory>
+    </Directory>
+    
+    <!-- Components -->
+    <DirectoryRef Id="MyProgramDir">
+      <Component Id="MainExecutable" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">        
+        <File Source="..\bin\Debug\net8.0-windows\c_sharp.dll" />
+        <File Source="..\bin\Debug\net8.0-windows\c_sharp.pdb" />
+        <File Source="..\bin\Debug\net8.0-windows\c_sharp.runtimeconfig.json" />
+        <File Source="..\bin\Debug\net8.0-windows\c_sharp.deps.json" />
+      </Component>
+    </DirectoryRef>    
+    
+    <!-- Desktop shortcut -->
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb474">
+        <Shortcut Id="DesktopShortcut"
+                  Name="MyDlgInstall"
+                  Description="My Application"
+                  Target="[MyProgramDir]c_sharp.exe"
+                  WorkingDirectory="INSTALLFOLDER" />   
+        <RemoveFolder Id="DesktopFolder" On="uninstall" />     
+        <RegistryValue Root="HKCU" Key="Software\MyDlgInstall" Name="desktopInstalled" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+    
+    <!-- Start Menu Shortcuts -->
+    <DirectoryRef Id="MyShortcutsDir">
+      <Component Id="StartMenuShortcut" Guid="33741C82-30BF-41AF-8246-44A5DCFCF953">
+        <Shortcut Id="ExecuteStartMenuShortcut"
+                Name="Lennon Software Execute"
+                Description="Read Lennon Software Execute"
+                Target="[MyProgramDir]c_sharp.exe" />
+                
+        <Shortcut Id="UninstallShortcut"
+                Name="Uninstall Lennon Software"
+                Description="Uninstalls Lennon Software"
+                Target="[System64Folder]msiexec.exe"
+                Arguments="/x [ProductCode]" />
+                
+        <RemoveFolder Id="RemoveMyShortcutsDir" On="uninstall" />
+                
+        <RegistryValue Root="HKCU"
+                Key="Software\Microsoft\LennonSoftware"
+                Name="installed"
+                Type="integer"
+                Value="1"
+                KeyPath="yes" />
+      </Component>
+    </DirectoryRef>    
+    
+    <!-- Features -->
+    <Feature Id="ProductFeature" Title="Main Product" Level="1">
+      <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="DesktopShortcut" />
+      <ComponentRef Id="StartMenuShortcut" />      
+    </Feature>
+  </Product>
+</Wix>
