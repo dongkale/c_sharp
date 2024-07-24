@@ -10,6 +10,10 @@
     <!-- <MediaTemplate /> -->
     <!-- <Media Id="1" Cabinet="cab1.cab" EmbedCab="yes" /> -->
 
+    <!-- Product information -->
+    <!-- https://wixtoolset.org/docs/v3/wixui/wixui_customizations/ -->
+    <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+
     <!-- Directory structure -->
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFilesFolder">
@@ -104,7 +108,8 @@
       <UIRef Id="WixUI_ErrorProgressText" />
       <UIRef Id="WixUI_InstallDir" />
       <UIRef Id="WixUI_InstallDir" />
-    </UI>    
-  </Product>  
+    </UI>
+    <!-- <WixVariable Id="WixUILicenseRtf" Value="license.rtf" /> -->
+  </Product>    
 </Wix>
 
