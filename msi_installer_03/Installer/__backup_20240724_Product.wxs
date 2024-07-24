@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" 
-     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-     <!-- xmlns:ui="http://schemas.microsoft.com/wix/UIExtension">    -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">   
   <Product Id="*" Name="MyDlgInstall" Language="1033" Version="1.0.0.0" Manufacturer="Lennon" UpgradeCode="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">
-    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Manufacturer="Lennon Company" Description="Installs Lennon Software" />      
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Manufacturer="Lennon Company" Description="Installs Lennon Software"> 
+      <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER"/>
+    </Package>
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
-
-    <MediaTemplate EmbedCab="yes" />
-    <!-- <MediaTemplate /> -->
-    <!-- <Media Id="1" Cabinet="cab1.cab" EmbedCab="yes" /> -->
+    <Media Id="1" Cabinet="cab1.cab" EmbedCab="yes" />
 
     <!-- Directory structure -->
     <Directory Id="TARGETDIR" Name="SourceDir">
@@ -82,7 +79,7 @@
 
     <!-- Property for default install directory -->
     <Property Id="WIXUI_INSTALLDIR" Value="MyProgramDir" />
-    
+
     <!-- Icon declaration -->
     <Icon Id="MyAppIcon" SourceFile="..\ico\cube-solid_3.ico" />
     
@@ -90,21 +87,8 @@
     <Feature Id="ProductFeature" Title="Main Product" Level="1">
       <ComponentRef Id="MainExecutable" />
       <ComponentRef Id="DesktopShortcut" />
-      <ComponentRef Id="StartMenuShortcut" />
-      <ComponentRef Id="IconComponent" />
+      <ComponentRef Id="StartMenuShortcut" />      
+       <ComponentRef Id="IconComponent" />
     </Feature>
-
-    <!-- UI for installation -->
-    <UI>
-      <!-- <UIRef Id="WixUI_InstallDir" />
-      <UIRef Id="WixUI_ErrorProgressText" />
-      <DialogRef Id="LicenseAgreementDlg" /> -->
-
-      <UIRef Id="WixUI_Common" />
-      <UIRef Id="WixUI_ErrorProgressText" />
-      <UIRef Id="WixUI_InstallDir" />
-      <UIRef Id="WixUI_InstallDir" />
-    </UI>    
-  </Product>  
+  </Product>
 </Wix>
-

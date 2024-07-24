@@ -15,7 +15,7 @@ namespace c_sharp
             ApplicationConfiguration.Initialize();            
 
             form.FormLayout();;
-            Application.Run(form);            
+            Application.Run(form);
         }
     }
 }

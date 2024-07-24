@@ -18,13 +18,14 @@
     
     <!-- Components -->
     <DirectoryRef Id="MyProgramDir">
-      <Component Id="MainExecutable" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">        
+      <Component Id="MainExecutable" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">
+        <File Source="..\bin\Debug\net8.0-windows\c_sharp.exe" />
         <File Source="..\bin\Debug\net8.0-windows\c_sharp.dll" />
         <File Source="..\bin\Debug\net8.0-windows\c_sharp.pdb" />
         <File Source="..\bin\Debug\net8.0-windows\c_sharp.runtimeconfig.json" />
         <File Source="..\bin\Debug\net8.0-windows\c_sharp.deps.json" />
       </Component>
-    </DirectoryRef>    
+    </DirectoryRef>
     
     <!-- Desktop shortcut -->
     <DirectoryRef Id="DesktopFolder">
