@@ -13,7 +13,7 @@
     <!-- Product information -->
     <!-- https://wixtoolset.org/docs/v3/wixui/wixui_customizations/ -->
     <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
-
+    
     <!-- Directory structure -->
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFilesFolder">
