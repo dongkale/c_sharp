@@ -9,8 +9,8 @@ public partial class Form1 : Form
 
     public void FormLayout()
     {
-        this.Name = "레논";
-        this.Text = "레논";
+        this.Name = "Form1";
+        this.Text = "Form1";
         this.Size = new System.Drawing.Size(500, 500);
         this.StartPosition = FormStartPosition.CenterScreen;
     }

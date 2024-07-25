@@ -1,6 +1,10 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" 
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util" >
      <!-- xmlns:ui="http://schemas.microsoft.com/wix/UIExtension">  -->     
-  <Package Name="MyDlgInstall" Language="1033" Version="1.0.0.0" Manufacturer="Lennon" UpgradeCode="41d5c516-f3fb-4ce2-8dab-20c3c14fb470"><SummaryInformation Manufacturer="Lennon Company" Description="Installs Lennon Software" />      
+  <Product Id="*" Name="MyDlgInstall" Language="1033" Version="1.0.0.0" Manufacturer="Lennon" UpgradeCode="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Manufacturer="Lennon Company" Description="Installs Lennon Software" />      
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 
     <MediaTemplate EmbedCab="yes" />
@@ -12,12 +16,20 @@
     <WixVariable Id="WixUILicenseRtf" Value="license\license.rtf" />    
     
     <!-- Directory structure -->
-    
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="MyProgramDir" Name="Lennon Software" />
+        <Directory Id="DesktopFolder" />
+        <Directory Id="ProgramMenuFolder">
+          <Directory Id="MyShortcutsDir" Name="Lennon Software" />
+        </Directory>
+      </Directory>
+    </Directory>
     
     <!-- Components -->
     <DirectoryRef Id="MyProgramDir">
       <Component Id="MainExecutable" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">        
-        <File Id="myapplication.exe" Source="..\bin\Debug\net8.0-windows\c_sharp.exe" KeyPath="yes" Checksum="yes" />
+        <File Id="myapplication.exe" Source="..\bin\Debug\net8.0-windows\c_sharp.exe" KeyPath="yes" Checksum="yes"/>
         <File Source="..\bin\Debug\net8.0-windows\c_sharp.dll" />
         <File Source="..\bin\Debug\net8.0-windows\c_sharp.pdb" />
         <File Source="..\bin\Debug\net8.0-windows\c_sharp.runtimeconfig.json" />
@@ -32,24 +44,44 @@
     </DirectoryRef>    
     
     <!-- Desktop shortcut -->
-    <StandardDirectory Id="DesktopFolder">
+    <DirectoryRef Id="DesktopFolder">
       <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb474">
-        <Shortcut Id="DesktopShortcut" Name="MyDlgInstall" Description="My Application" Target="[MyProgramDir]c_sharp.exe" WorkingDirectory="INSTALLFOLDER" Icon="MyAppIcon" IconIndex="0" />   
+        <Shortcut Id="DesktopShortcut"
+                  Name="MyDlgInstall"
+                  Description="My Application"
+                  Target="[MyProgramDir]c_sharp.exe"
+                  WorkingDirectory="INSTALLFOLDER" 
+                  Icon="MyAppIcon"
+                  IconIndex="0" />   
         <RemoveFolder Id="DesktopFolder" On="uninstall" />     
         <RegistryValue Root="HKCU" Key="Software\MyDlgInstall" Name="desktopInstalled" Type="integer" Value="1" KeyPath="yes" />
       </Component>
-    </StandardDirectory>
+    </DirectoryRef>
     
     <!-- Start Menu Shortcuts -->
     <DirectoryRef Id="MyShortcutsDir">
       <Component Id="StartMenuShortcut" Guid="33741C82-30BF-41AF-8246-44A5DCFCF953">
-        <Shortcut Id="ExecuteStartMenuShortcut" Name="Lennon Software Execute" Description="Read Lennon Software Execute" Target="[MyProgramDir]c_sharp.exe" Icon="MyAppIcon" IconIndex="0" />
+        <Shortcut Id="ExecuteStartMenuShortcut"
+                Name="Lennon Software Execute"
+                Description="Read Lennon Software Execute"
+                Target="[MyProgramDir]c_sharp.exe" 
+                Icon="MyAppIcon"
+                IconIndex="0"/>
                 
-        <Shortcut Id="UninstallShortcut" Name="Uninstall Lennon Software" Description="Uninstalls Lennon Software" Target="[System64Folder]msiexec.exe" Arguments="/x [ProductCode]" />
+        <Shortcut Id="UninstallShortcut"
+                Name="Uninstall Lennon Software"
+                Description="Uninstalls Lennon Software"
+                Target="[System64Folder]msiexec.exe"
+                Arguments="/x [ProductCode]" />
                 
         <RemoveFolder Id="RemoveMyShortcutsDir" On="uninstall" />
                 
-        <RegistryValue Root="HKCU" Key="Software\Microsoft\LennonSoftware" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+        <RegistryValue Root="HKCU"
+                Key="Software\Microsoft\LennonSoftware"
+                Name="installed"
+                Type="integer"
+                Value="1"
+                KeyPath="yes" />
       </Component>
     </DirectoryRef>
 
@@ -61,7 +93,7 @@
     <!-- 마지막 설치 창에서 프로그램 실행 Step 1 (https://wixtoolset.org/docs/v3/howtos/ui_and_localization/run_program_after_install) -->
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="프로그램 실행" />
     <Property Id="WixShellExecTarget" Value="[#myapplication.exe]" />   <!-- 소스(실행화일) id 지정 -->
-    <CustomAction Id="LaunchApplication" DllEntry="WixShellExec" Impersonate="yes" BinaryRef="Wix4UtilCA_X86" />
+    <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
     
     <!-- Icon declaration -->
     <Icon Id="MyAppIcon" SourceFile="icon\cube-solid_3.ico" />
@@ -83,10 +115,14 @@
       
       <UIRef Id="WixUI_Common" />
       <UIRef Id="WixUI_ErrorProgressText" />
-      <ui:WixUI Id="WixUI_InstallDir" />
+      <UIRef Id="WixUI_InstallDir" />
 
       <!-- 마지막 설치 창에서 프로그램 실행 Step 2 -->
-      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed" />
+      <Publish Dialog="ExitDialog"
+         Control="Finish" 
+         Event="DoAction" 
+         Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed
+      </Publish>
 
       <!-- <Publish
         Dialog="WelcomeDlg"
@@ -96,13 +132,5 @@
         /> -->
     </UI>    
     
-  
-      <StandardDirectory Id="ProgramFilesFolder">
-        <Directory Id="MyProgramDir" Name="Lennon Software" />
-        <StandardDirectory Id="DesktopFolder" />
-        <StandardDirectory Id="ProgramMenuFolder">
-          <Directory Id="MyShortcutsDir" Name="Lennon Software" />
-        </StandardDirectory>
-      </StandardDirectory>
-    </Package>    
+  </Product>    
 </Wix>

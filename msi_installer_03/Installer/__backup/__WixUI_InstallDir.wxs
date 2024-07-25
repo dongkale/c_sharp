@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://schemas.microsoft.com/wix/UIExtension">
+  <Fragment>
+    <UI>
+      <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+      <DialogRef Id="BrowseDlg" />
+      <DialogRef Id="DiskCostDlg" />
+      <DialogRef Id="ErrorDlg" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="MsiRMFilesInUse" />
+      <DialogRef Id="PrepareDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="UserExit" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" />
+
+      <!-- License Agreement Dialog -->
+      <Dialog Id="LicenseAgreementDlg" Width="370" Height="270" Title="[ProductName] 설치">
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="60" Height="17" Text="&amp;Back">
+          <Publish Event="NewDialog" Value="WelcomeDlg">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="60" Height="17" Default="yes" Text="&amp;Next">
+          <Publish Event="NewDialog" Value="InstallDirDlg">LicenseAccepted = 1</Publish>
+          <Publish Event="SpawnDialog" Value="LicenseNotAcceptedDlg">LicenseAccepted = 0</Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="60" Height="17" Cancel="yes" Text="&amp;Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+        <Control Id="Text" Type="Text" X="25" Y="40" Width="320" Height="80">
+          <Text>여기에 라이선스 동의서 내용을 입력하세요.</Text>
+        </Control>
+        <Control Id="LicenseAccepted" Type="CheckBox" X="20" Y="230" Width="330" Height="17" CheckBoxValue="1" Property="LicenseAccepted" Text="I accept the terms in the License Agreement" />
+      </Dialog>
+
+      <Dialog Id="InstallDirDlg" Width="370" Height="270" Title="[ProductName] 설치">
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="60" Height="17" Text="&amp;Back">
+          <Publish Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="60" Height="17" Default="yes" Text="&amp;Next">
+          <Publish Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]">1</Publish>
+          <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="60" Height="17" Cancel="yes" Text="&amp;Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+        <Control Id="FolderLabel" Type="Text" X="15" Y="120" Width="300" Height="30">
+          <Text>설치할 폴더를 선택하세요:</Text>
+        </Control>
+        <Control Id="Folder" Type="PathEdit" X="15" Y="135" Width="200" Height="18" Property="WIXUI_INSTALLDIR" Indirect="yes" />
+        <Control Id="ChangeFolder" Type="PushButton" X="220" Y="133" Width="50" Height="18" Text="Change...">
+          <Publish Event="SpawnDialog" Value="BrowseDlg">1</Publish>
+        </Control>
+      </Dialog>
+
+      <Dialog Id="VerifyReadyDlg" Width="370" Height="270" Title="[ProductName] 설치 준비 완료">
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="60" Height="17" Text="&amp;Back">
+          <Publish Event="NewDialog" Value="InstallDirDlg">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="60" Height="17" Default="yes" Text="&amp;Install">
+          <Publish Event="DoAction" Value="INSTALL">1</Publish>
+          <Publish Event="NewDialog" Value="ProgressDlg">1</Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="60" Height="17" Cancel="yes" Text="&amp;Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+        <Control Id="Text" Type="Text" X="25" Y="40" Width="320" Height="80">
+          <Text>설치를 시작할 준비가 되었습니다.</Text>
+        </Control>
+      </Dialog>
+    </UI>
+
+    <UIRef Id="WixUI_Common" />
+  </Fragment>
+</Wix>

@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" 
-     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
-     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util" >
-     <!-- xmlns:ui="http://schemas.microsoft.com/wix/UIExtension">    -->     
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"> 
   <Product Id="*" Name="MyDlgInstall" Language="1033" Version="1.0.0.0" Manufacturer="Lennon" UpgradeCode="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">
-    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Manufacturer="Lennon Company" Description="Installs Lennon Software" />      
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Manufacturer="Lennon Company" Description="Installs Lennon Software"> 
+      <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER"/>    
+      <!-- <UIRef Id="WixUI_FeatureTree" /> -->
+    </Package>
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate />
 
-    <MediaTemplate EmbedCab="yes" />
-    <!-- <MediaTemplate /> -->
-    <!-- <Media Id="1" Cabinet="cab1.cab" EmbedCab="yes" /> -->
-
-    <!-- Product information -->
-    <!-- https://wixtoolset.org/docs/v3/wixui/wixui_customizations/ -->
-    <WixVariable Id="WixUILicenseRtf" Value="license\license.rtf" />    
-    
     <!-- Directory structure -->
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFilesFolder">
@@ -29,18 +22,11 @@
     <!-- Components -->
     <DirectoryRef Id="MyProgramDir">
       <Component Id="MainExecutable" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb470">        
-        <File Id="myapplication.exe" Source="..\bin\Debug\net8.0-windows\c_sharp.exe" KeyPath="yes" Checksum="yes"/>
         <File Source="..\bin\Debug\net8.0-windows\c_sharp.dll" />
         <File Source="..\bin\Debug\net8.0-windows\c_sharp.pdb" />
         <File Source="..\bin\Debug\net8.0-windows\c_sharp.runtimeconfig.json" />
         <File Source="..\bin\Debug\net8.0-windows\c_sharp.deps.json" />
       </Component>
-
-      <!-- Icon File -->
-      <Component Id="IconComponent" Guid="41d5c516-f3fb-4ce2-8dab-20c3c14fb475">
-        <File Id="MyAppIcon" Source="icon\cube-solid_3.ico" />
-      </Component>
-
     </DirectoryRef>    
     
     <!-- Desktop shortcut -->
@@ -50,9 +36,7 @@
                   Name="MyDlgInstall"
                   Description="My Application"
                   Target="[MyProgramDir]c_sharp.exe"
-                  WorkingDirectory="INSTALLFOLDER" 
-                  Icon="MyAppIcon"
-                  IconIndex="0" />   
+                  WorkingDirectory="INSTALLFOLDER" />   
         <RemoveFolder Id="DesktopFolder" On="uninstall" />     
         <RegistryValue Root="HKCU" Key="Software\MyDlgInstall" Name="desktopInstalled" Type="integer" Value="1" KeyPath="yes" />
       </Component>
@@ -64,9 +48,7 @@
         <Shortcut Id="ExecuteStartMenuShortcut"
                 Name="Lennon Software Execute"
                 Description="Read Lennon Software Execute"
-                Target="[MyProgramDir]c_sharp.exe" 
-                Icon="MyAppIcon"
-                IconIndex="0"/>
+                Target="[MyProgramDir]c_sharp.exe" />
                 
         <Shortcut Id="UninstallShortcut"
                 Name="Uninstall Lennon Software"
@@ -85,43 +67,18 @@
       </Component>
     </DirectoryRef>
 
-    <!-- Property for default install directory : 이 항목 제거하면 설치시 오류 발생 !! -->
-    <Property Id="WIXUI_INSTALLDIR" Value="MyProgramDir" />
-    
-    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="설치 해주셔서 감사합니다." />    
+    <!-- UI for installation -->
+    <UI>
+      <UIRef Id="WixUI_InstallDir" />
+      <UIRef Id="WixUI_ErrorProgressText" />
+    </UI>
 
-    <!-- 마지막 설치 창에서 프로그램 실행 Step 1 (https://wixtoolset.org/docs/v3/howtos/ui_and_localization/run_program_after_install) -->
-    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="프로그램 실행" />
-    <Property Id="WixShellExecTarget" Value="[#myapplication.exe]" />   <!-- 소스(실행화일) id 지정 -->
-    <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
-    
-    <!-- Icon declaration -->
-    <Icon Id="MyAppIcon" SourceFile="icon\cube-solid_3.ico" />
     
     <!-- Features -->
     <Feature Id="ProductFeature" Title="Main Product" Level="1">
       <ComponentRef Id="MainExecutable" />
       <ComponentRef Id="DesktopShortcut" />
-      <ComponentRef Id="StartMenuShortcut" />
-      <ComponentRef Id="IconComponent" />
+      <ComponentRef Id="StartMenuShortcut" />      
     </Feature>
-
-    <!-- UI for installation -->
-    <UI>
-      <UIRef Id="WixUI_InstallDir" />
-      <UIRef Id="WixUI_ErrorProgressText" />
-      <!-- <UIRef Id="WixUI_Minimal" /> -->
-      
-      <!-- <UIRef Id="WixUI_Common" />
-      <UIRef Id="WixUI_ErrorProgressText" />
-      <UIRef Id="WixUI_InstallDir" /> -->
-
-      <!-- 마지막 설치 창에서 프로그램 실행 Step 2 -->
-      <Publish Dialog="ExitDialog"
-         Control="Finish" 
-         Event="DoAction" 
-         Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
-    </UI>    
-    
-  </Product>    
+  </Product>
 </Wix>
