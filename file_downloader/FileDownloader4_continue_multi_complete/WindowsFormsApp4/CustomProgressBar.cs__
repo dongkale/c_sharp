@@ -1,0 +1,61 @@
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace MultiFileDownloader
+{
+    public class CustomProgressBar : Control
+    {
+        private ProgressBar _progressBar;
+        private string _text;
+
+        public CustomProgressBar()
+        {
+            _progressBar = new ProgressBar
+            {
+                Dock = DockStyle.Fill
+            };
+
+            this.Controls.Add(_progressBar);
+            this.Resize += (s, e) => _progressBar.Size = this.ClientSize;
+            this.DoubleBuffered = true;
+        }
+
+        public int Maximum
+        {
+            get => _progressBar.Maximum;
+            set => _progressBar.Maximum = value;
+        }
+
+        public int Value
+        {
+            get => _progressBar.Value;
+            set => _progressBar.Value = value;
+        }
+
+        public string ProgressText
+        {
+            get => _text;
+            set
+            {
+                _text = value;
+                this.Invalidate(); // Trigger redraw to update the text
+            }
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            if (_progressBar.Maximum > 0)
+            {
+                // Draw the text in the center of the progress bar
+                using (var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
+                using (var brush = new SolidBrush(ForeColor))
+                {
+                    e.Graphics.DrawString(_text, Font, brush, ClientRectangle, format);                    
+                }
+            }
+        }
+    }
+}
