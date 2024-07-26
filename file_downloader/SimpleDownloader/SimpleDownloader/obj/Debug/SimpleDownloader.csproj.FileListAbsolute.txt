@@ -1,0 +1,9 @@
+D:\LDK_Work\Source\c_sharp\file_downloader\SimpleDownloader\SimpleDownloader\bin\Debug\SimpleDownloader.exe.config
+D:\LDK_Work\Source\c_sharp\file_downloader\SimpleDownloader\SimpleDownloader\bin\Debug\SimpleDownloader.exe
+D:\LDK_Work\Source\c_sharp\file_downloader\SimpleDownloader\SimpleDownloader\bin\Debug\SimpleDownloader.pdb
+D:\LDK_Work\Source\c_sharp\file_downloader\SimpleDownloader\SimpleDownloader\obj\Debug\SimpleDownloader.csproj.AssemblyReference.cache
+D:\LDK_Work\Source\c_sharp\file_downloader\SimpleDownloader\SimpleDownloader\obj\Debug\SimpleDownloader.MainForm.resources
+D:\LDK_Work\Source\c_sharp\file_downloader\SimpleDownloader\SimpleDownloader\obj\Debug\SimpleDownloader.csproj.GenerateResource.cache
+D:\LDK_Work\Source\c_sharp\file_downloader\SimpleDownloader\SimpleDownloader\obj\Debug\SimpleDownloader.csproj.CoreCompileInputs.cache
+D:\LDK_Work\Source\c_sharp\file_downloader\SimpleDownloader\SimpleDownloader\obj\Debug\SimpleDownloader.exe
+D:\LDK_Work\Source\c_sharp\file_downloader\SimpleDownloader\SimpleDownloader\obj\Debug\SimpleDownloader.pdb

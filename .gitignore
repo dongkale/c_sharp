@@ -52,3 +52,5 @@ lerna-debug.log*
 *.cab
 
 __Exec
+
+.vs

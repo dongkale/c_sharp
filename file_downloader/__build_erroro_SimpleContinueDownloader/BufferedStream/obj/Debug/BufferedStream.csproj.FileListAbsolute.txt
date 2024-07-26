@@ -1,0 +1,2 @@
+D:\LDK_Work\Source\c_sharp\file_downloader\SimpleContinueDownloader\BufferedStream\obj\Debug\BufferedStream.exe
+D:\LDK_Work\Source\c_sharp\file_downloader\SimpleContinueDownloader\BufferedStream\obj\Debug\BufferedStream.pdb

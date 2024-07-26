@@ -1,0 +1,8 @@
+obj\Debug\ResolveAssemblyReference.cache
+obj\Debug\BufferedStreamTest.Form1.resources
+obj\Debug\BufferedStream.csproj.GenerateResource.Cache
+obj\Debug\BufferedStreamTest.Properties.Resources.resources
+bin\Debug\BufferedStream.exe
+bin\Debug\BufferedStream.pdb
+obj\Debug\BufferedStream.exe
+obj\Debug\BufferedStream.pdb
