@@ -196,9 +196,9 @@ namespace winforms_src
         public Label StatusLabel { get; private set; }
         public Label UrlLabel { get; private set; }
         public Panel Panel { get; private set; }
-        public long TotalBytesReceived { get; set; }
-        public long TotalFileSize { get; set; }
-        public bool IsComplete { get; set; }
+        public long TotalBytesReceived { get; set; } = 0;
+        public long TotalFileSize { get; set; } = 0;
+        public bool IsComplete { get; set; } = false;
 
         public DownloadItem(string url, string folderPath)
         {
