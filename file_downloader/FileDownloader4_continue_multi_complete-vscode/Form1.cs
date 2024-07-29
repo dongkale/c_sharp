@@ -11,16 +11,15 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace winforms_src
-{   
-
+{
     public partial class Form1 : Form
     {
         private List<DownloadItem> downloadItems = new List<DownloadItem>();
-        
+
         public Form1()
         {
-            InitializeComponent();        
-        }        
+            InitializeComponent();
+        }
 
         private void btnSelectFolder_Click(object sender, EventArgs e)
         {
@@ -52,7 +51,7 @@ namespace winforms_src
 
             DownloadItem item = new DownloadItem(url, txtFolder.Text);
             downloadItems.Add(item);
-            flowLayoutPanel1.Controls.Add(item.Panel);            
+            flowLayoutPanel1.Controls.Add(item.Panel);
             Logger.Log(String.Format("{0} - 다운로드 추가", url));
         }
 
@@ -110,17 +109,17 @@ namespace winforms_src
 
                     // Ensure parts are combined correctly
                     CombineParts(item, partCount);
-                    Invoke(new Action(() => item.UpdateStatus("다운로드 완료")));                    
+                    Invoke(new Action(() => item.UpdateStatus("다운로드 완료")));
 
                     item.IsComplete = true;
-                    
+
                     Logger.Log(String.Format("{0} - 다운로드 완료", item.Url));
                 }
                 catch (Exception ex)
                 {
-                    Invoke(new Action(() => item.UpdateStatus("다운로드 오류: " + ex.Message)));                    
+                    Invoke(new Action(() => item.UpdateStatus("다운로드 오류: " + ex.Message)));
 
-                    Logger.ErrorLog(String.Format("{0} - 다운로드 오류: {1}", item.Url, ex.Message));                    
+                    Logger.ErrorLog(String.Format("{0} - 다운로드 오류: {1}", item.Url, ex.Message));
                 }
             }
         }
@@ -186,7 +185,7 @@ namespace winforms_src
                     }
                 }
             }
-        }        
+        }
     }
 
     public class DownloadItem
@@ -231,20 +230,20 @@ namespace winforms_src
             for (int i = 0; ; i++)
             {
                 string tempFilePath = $"{DownloadPath}.part{i}";
-                if (!File.Exists(tempFilePath)) 
+                if (!File.Exists(tempFilePath))
                 {
-                    break;        
+                    break;
                 }
 
-                TotalBytesReceived += new FileInfo(tempFilePath).Length;                
+                TotalBytesReceived += new FileInfo(tempFilePath).Length;
             }
         }
 
         public void UpdateProgress(long bytesReceived, long totalBytes)
         {
             if (totalBytes == 0)
-            {                
-                Logger.ErrorLog(String.Format("{0} - 다운로드 오류: {1}", Url, "totalBytes == 0"));                
+            {
+                Logger.ErrorLog(String.Format("{0} - 다운로드 오류: {1}", Url, "totalBytes == 0"));
                 return;
             }
 
@@ -253,7 +252,7 @@ namespace winforms_src
             // ProgressBar.CustomText = $"{bytesReceived} / {totalBytes} bytes ({(bytesReceived * 100) / totalBytes}%)";
 
             // Update URL Label to display within ProgressBar
-            UrlLabel.Text = Url;        
+            UrlLabel.Text = Url;
 
             return;
         }
@@ -262,5 +261,5 @@ namespace winforms_src
         {
             StatusLabel.Text = status;
         }
-    }    
+    }
 }

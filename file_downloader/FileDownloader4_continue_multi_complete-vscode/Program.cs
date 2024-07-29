@@ -18,5 +18,5 @@ static class Program
         Logger.Init();
 
         Application.Run(new Form1());
-    }    
+    }
 }
