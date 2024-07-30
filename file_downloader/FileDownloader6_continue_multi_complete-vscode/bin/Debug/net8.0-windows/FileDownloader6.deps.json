@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "FileDownloader6/1.0.0": {
+        "runtime": {
+          "FileDownloader6.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "FileDownloader6/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

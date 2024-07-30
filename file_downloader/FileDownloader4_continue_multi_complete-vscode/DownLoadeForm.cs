@@ -12,11 +12,11 @@ using System.Windows.Forms;
 
 namespace winforms_src
 {
-    public partial class Form1 : Form
+    public partial class DownLoadeForm : Form
     {
         private List<DownloadItem> downloadItems = new List<DownloadItem>();
 
-        public Form1()
+        public DownLoadeForm()
         {
             InitializeComponent();
         }

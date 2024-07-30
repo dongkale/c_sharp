@@ -7,8 +7,8 @@ namespace winforms_src
     {
         static private string logDirectory = string.Empty;
         static private string currentLogFilePath = string.Empty;
-        static private DateTime currentLogDate;        
-        
+        static private DateTime currentLogDate;
+
         static private void UpdateLogFilePath()
         {
             currentLogDate = DateTime.Today;
@@ -44,8 +44,10 @@ namespace winforms_src
             }
         }
 
-        static public void Init() {
-            logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");            
+        static public void Init()
+        {
+            logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+            Directory.CreateDirectory(logDirectory);
         }
-    }     
+    }
 }

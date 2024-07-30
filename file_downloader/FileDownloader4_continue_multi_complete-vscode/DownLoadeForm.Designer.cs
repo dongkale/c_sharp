@@ -1,6 +1,6 @@
 ﻿namespace winforms_src;
 
-partial class Form1
+partial class DownLoadeForm
 {
     /// <summary>
     /// 필수 디자이너 변수입니다.
@@ -79,7 +79,7 @@ partial class Form1
         this.flowLayoutPanel1.Size = new System.Drawing.Size(522, 300);
         this.flowLayoutPanel1.TabIndex = 5;
 
-        // Form1
+        // DownLoadeForm
         this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
         this.ClientSize = new System.Drawing.Size(546, 382);
@@ -89,7 +89,7 @@ partial class Form1
         this.Controls.Add(this.btnSelectFolder);
         this.Controls.Add(this.btnAddUrl);
         this.Controls.Add(this.txtUrl);
-        this.Name = "Form1";
+        this.Name = "DownLoadeForm";
         this.Text = "멀티 파일 다운로더";
         this.ResumeLayout(false);
         this.PerformLayout();
