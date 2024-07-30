@@ -285,7 +285,7 @@ public partial class FileDownloader : Form
         overallProgressBar.Value = percentage;
     }
 
-    public async Task<string> GetFileContentAsync(string url)
+    public async Task<(bool, string)> GetFileContentAsync(string url)
     {
         using (HttpClient client = new HttpClient())
         {
@@ -296,13 +296,13 @@ public partial class FileDownloader : Form
                 {
                     response.EnsureSuccessStatusCode();
                     string content = await response.Content.ReadAsStringAsync();
-                    return content;
+                    return (true, content);
                 }
             }
             catch (Exception ex)
             {
                 // 오류가 발생하면 예외 메시지를 반환
-                return $"다운로드 오류: {ex.Message}";
+                return (false, $"다운로드 오류: {ex.Message}");
             }
         }
     }
@@ -323,10 +323,11 @@ public partial class FileDownloader : Form
         //await DownloadFileAsync(downloadUrl, downloadPath);
 
         // FileContentDownloader downloader = new FileContentDownloader();
-        string content = await GetFileContentAsync(downloadUrl);
+        // string content = await GetFileContentAsync(downloadUrl);
+        (bool result, string content) = await GetFileContentAsync(downloadUrl);
 
         // 다운로드한 콘텐츠를 텍스트 박스에 표시
-        Logger.ErrorLog($"{content}"); ;
+        Logger.ErrorLog($"{result} - {content}"); ;
     }
 
     // public async Task DownloadFileAsync(string url, string folderPath)
