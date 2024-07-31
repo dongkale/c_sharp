@@ -313,9 +313,7 @@ public partial class FileDownloader : Form
     {
         string downloadUrl = "http://localhost:3030/newest.txt";
 
-        string downloadPath = DEFAULT_DOWNLOAD_FOLDER;
-
-        // int totalFileSize = 0;
+        // string downloadPath = DEFAULT_DOWNLOAD_FOLDER;
 
         // downloadPath = Path.Combine(txtFolder.Text, Path.GetFileName(downloadUrl));
 
