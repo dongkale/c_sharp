@@ -56,3 +56,10 @@ __Exec
 .vs
 
 /bin/Debug
+/obj
+
+*/bin/Debug
+*/obj
+
+*.exe
+*.pdb
