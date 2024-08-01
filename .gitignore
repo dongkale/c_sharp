@@ -54,3 +54,5 @@ lerna-debug.log*
 __Exec
 
 .vs
+
+/bin/Debug
