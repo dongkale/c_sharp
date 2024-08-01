@@ -46,6 +46,13 @@ public partial class FileDownloader : Form
         bool isResult = await FileDownloader_Load();
         if (isResult)
         {
+            // Initialize the overall progress bar
+            overallProgressBar = new TextProgressBar { Width = 480, Height = 20, VisualMode = ProgressBarDisplayMode.Percentage, Location = new Point(15, 45) };
+            this.Controls.Add(overallProgressBar);
+
+            btnUpdate.Text = "업데이트";
+            btnUpdate.Enabled = true;
+
             btnDownload.Enabled = true;
         }
     }
@@ -90,7 +97,7 @@ public partial class FileDownloader : Form
         var files = new List<FilePathData>
         {
             new FilePathData { filePath = "text/text.txt", checksum = "902fbdd2b1df0c4f70b4a5d23525e932" },
-            new FilePathData { filePath = "image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
+            // new FilePathData { filePath = "image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
             // new FilePathData { filePath = "image-12/image_12.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
             // new FilePathData { filePath = "image-11/image_11.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
             // new FilePathData { filePath = "image-10/image_10.bin", checksum = "cb3fffcc0e7c5b2874c639a4107b3a6a" },
@@ -140,7 +147,7 @@ public partial class FileDownloader : Form
         // 2. checksum이 일치하지 않으면 다운로드 진행(변경된 파일)
 
         downloadItems.Clear();
-        // this.Controls.Clear();
+        flowLayoutPanel.Controls.Clear();
 
         foreach (var file in files)
         {
@@ -151,41 +158,58 @@ public partial class FileDownloader : Form
 
             Logger.Log($"[FileDownloader_Load] {url} - isValidUrl: {isValidUrl}, isChecksum: {isChecksum}");
 
-            AddDownloadItem(url);
-            Logger.Log($"[FileDownloader_Load] [DownloadList] {url}");
+            // AddDownloadItem(url);
+
+            if (downloadItems.Any(x => x.Url == url))
+            {
+                Logger.ErrorLog($"{url} - 이미 추가된 URL입니다.");
+                continue;
+            }
+
+            FileDownloaderItem item = new FileDownloaderItem(url, downloadFolder);
+
+            item.ProgressUpdated += UpdateOverallProgress;
+            item.StatusUpdated += (sender, status) => Logger.Log($"{url} - {status}");
+
+            downloadItems.Add(item);
+            flowLayoutPanel.Controls.Add(item.UI.Panel);
+
+            // Logger.Log($"[FileDownloader_Load] [DownloadList] {url}");
+
+            Logger.Log($"[AddDownloadItem] {url} - 다운로드 추가");
         }
 
-        // Initialize the overall progress bar
-        overallProgressBar = new TextProgressBar { Width = 480, Height = 20, VisualMode = ProgressBarDisplayMode.Percentage, Location = new Point(15, 45) };
-        this.Controls.Add(overallProgressBar);
+        // // Initialize the overall progress bar
+        // overallProgressBar = new TextProgressBar { Width = 480, Height = 20, VisualMode = ProgressBarDisplayMode.Percentage, Location = new Point(15, 45) };
+        // this.Controls.Add(overallProgressBar);
 
-        btnUpdate.Text = "업데이트";
-        btnUpdate.Enabled = true;
+        // btnUpdate.Text = "업데이트";
+        // btnUpdate.Enabled = true;
 
         return true;
     }
 
-    private bool AddDownloadItem(string url)
-    {
-        if (downloadItems.Any(x => x.Url == url))
-        {
-            // MessageBox.Show("이미 추가된 URL입니다.");
-            Logger.ErrorLog($"{url} - 이미 추가된 URL입니다.");
-            return false;
-        }
+    // private bool AddDownloadItem(string url)
+    // {
+    //     if (downloadItems.Any(x => x.Url == url))
+    //     {
+    //         // MessageBox.Show("이미 추가된 URL입니다.");
+    //         Logger.ErrorLog($"{url} - 이미 추가된 URL입니다.");
+    //         return false;
+    //     }
 
-        FileDownloaderItem item = new FileDownloaderItem(url, downloadFolder);
+    //     FileDownloaderItem item = new FileDownloaderItem(url, downloadFolder);
 
-        item.ProgressUpdated += UpdateOverallProgress;
-        item.StatusUpdated += (sender, status) => Logger.Log($"{url} - {status}");
+    //     item.ProgressUpdated += UpdateOverallProgress;
+    //     item.StatusUpdated += (sender, status) => Logger.Log($"{url} - {status}");
 
-        downloadItems.Add(item);
-        flowLayoutPanel.Controls.Add(item.UI.Panel);
+    //     downloadItems.Add(item);
+    //     flowLayoutPanel.Controls.Add(item.UI.Panel);
 
-        Logger.Log($"[AddDownloadItem] {url} - 다운로드 추가");
+    //     Logger.Log($"[AddDownloadItem] {url} - 다운로드 추가");
 
-        return true;
-    }
+    //     return true;
+    // }
 
     private bool IsChecksum(string downloadFolder, string url, string checksum)
     {

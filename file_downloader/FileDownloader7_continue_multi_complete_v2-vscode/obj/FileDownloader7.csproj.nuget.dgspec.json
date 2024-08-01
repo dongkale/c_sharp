@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "d:\\LDK_Work\\Source\\c_sharp\\file_downloader\\FileDownloader7_continue_multi_complete_v2-vscode\\FileDownloader7.csproj": {}
+    "D:\\LDK_Work\\Source\\c_sharp\\file_downloader\\FileDownloader7_continue_multi_complete_v2-vscode\\FileDownloader7.csproj": {}
   },
   "projects": {
-    "d:\\LDK_Work\\Source\\c_sharp\\file_downloader\\FileDownloader7_continue_multi_complete_v2-vscode\\FileDownloader7.csproj": {
+    "D:\\LDK_Work\\Source\\c_sharp\\file_downloader\\FileDownloader7_continue_multi_complete_v2-vscode\\FileDownloader7.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "d:\\LDK_Work\\Source\\c_sharp\\file_downloader\\FileDownloader7_continue_multi_complete_v2-vscode\\FileDownloader7.csproj",
+        "projectUniqueName": "D:\\LDK_Work\\Source\\c_sharp\\file_downloader\\FileDownloader7_continue_multi_complete_v2-vscode\\FileDownloader7.csproj",
         "projectName": "FileDownloader7",
-        "projectPath": "d:\\LDK_Work\\Source\\c_sharp\\file_downloader\\FileDownloader7_continue_multi_complete_v2-vscode\\FileDownloader7.csproj",
+        "projectPath": "D:\\LDK_Work\\Source\\c_sharp\\file_downloader\\FileDownloader7_continue_multi_complete_v2-vscode\\FileDownloader7.csproj",
         "packagesPath": "C:\\Users\\dklee\\.nuget\\packages\\",
-        "outputPath": "d:\\LDK_Work\\Source\\c_sharp\\file_downloader\\FileDownloader7_continue_multi_complete_v2-vscode\\obj\\",
+        "outputPath": "D:\\LDK_Work\\Source\\c_sharp\\file_downloader\\FileDownloader7_continue_multi_complete_v2-vscode\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
