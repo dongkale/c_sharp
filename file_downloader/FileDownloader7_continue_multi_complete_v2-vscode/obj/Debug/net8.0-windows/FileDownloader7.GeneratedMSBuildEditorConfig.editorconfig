@@ -14,6 +14,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = FileDownloader7
-build_property.ProjectDir = D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\
+build_property.ProjectDir = d:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

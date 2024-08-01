@@ -11,13 +11,43 @@ public static class Utils
 {
     public static string CalculateMD5FromFile(string filename)
     {
-        using (var md5 = MD5.Create())
+        // using (var md5 = MD5.Create())
+        // {
+        //     using (var stream = File.OpenRead(filename))
+        //     {
+        //         var hash = md5.ComputeHash(stream);
+        //         return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        //     }
+        // }
+
+        try
         {
-            using (var stream = File.OpenRead(filename))
+            using (var md5 = MD5.Create())
             {
-                var hash = md5.ComputeHash(stream);
-                return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                using (var stream = File.OpenRead(filename))
+                {
+                    var hash = md5.ComputeHash(stream);
+                    return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                }
             }
+        }
+        catch (FileNotFoundException ex)
+        {
+            // 파일이 존재하지 않을 때
+            Logger.ErrorLog($"파일을 찾을 수 없습니다: {filename}. 오류: {ex.Message}");
+            return string.Empty;
+        }
+        catch (IOException ex)
+        {
+            // 파일을 읽을 수 없을 때
+            Logger.ErrorLog($"파일을 읽는 중 오류가 발생했습니다: {filename}. 오류: {ex.Message}");
+            return string.Empty;
+        }
+        catch (Exception ex)
+        {
+            // 기타 예외 처리
+            Logger.ErrorLog($"예상치 못한 오류가 발생했습니다: {filename}. 오류: {ex.Message}");
+            return string.Empty;
         }
     }
 
@@ -140,7 +170,6 @@ public static class Utils
             }
             catch (HttpRequestException ex)
             {
-                // Handle unauthorized access here
                 Console.WriteLine($"Error: {ex.Message}");
                 return (false, ex.Message);
             }
@@ -173,13 +202,11 @@ public static class Utils
             }
             catch (HttpRequestException ex)
             {
-                // Handle unauthorized access here
                 Console.WriteLine($"Error: {ex.Message}");
                 return (false, ex.Message);
             }
             catch (Exception ex)
             {
-                // throw new InvalidOperationException("Failed to fetch data from the API.", ex);
                 Console.WriteLine($"Error: {ex.Message}");
                 return (false, ex.Message);
             }
@@ -295,6 +322,33 @@ public static class Utils
         }
 
         return (true, "Suceess", deserializeResult.ResultData);
+    }
+
+    /// <summary>
+    /// 지정한 URL이 다운로드 가능한지 확인합니다.
+    /// </summary>
+    /// <param name="url">확인할 URL</param>
+    /// <returns>다운로드 가능 여부</returns>
+    public static async Task<bool> IsDownloadableAsync(string url)
+    {
+        try
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                // HEAD 요청을 사용하여 파일이 존재하는지 확인
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, url);
+                HttpResponseMessage response = await client.SendAsync(request);
+
+                // 상태 코드가 200(OK)인 경우 다운로드 가능
+                return response.StatusCode == System.Net.HttpStatusCode.OK;
+            }
+        }
+        catch (Exception ex)
+        {
+            // 예외 발생 시 로그를 남기고 다운로드 불가능으로 간주
+            Logger.ErrorLog($"URL 확인 중 오류 발생: {ex.Message}");
+            return false;
+        }
     }
 
 }

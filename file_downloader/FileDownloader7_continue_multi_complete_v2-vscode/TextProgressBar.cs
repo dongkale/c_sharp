@@ -21,7 +21,7 @@ public enum ProgressBarDisplayMode
 public class TextProgressBar : ProgressBar
 {
     [Description("Font of the text on ProgressBar"), Category("Additional Options")]
-    public Font TextFont { get; set; } = new Font(FontFamily.GenericSerif, 10); //, FontStyle.Bold | FontStyle.Italic);
+    public Font TextFont { get; set; } = new Font(FontFamily.GenericMonospace, 8); //, FontStyle.Bold | FontStyle.Italic);
     private SolidBrush _textColourBrush = (SolidBrush)Brushes.Black;
     [Category("Additional Options")]
     public Color TextColor
@@ -110,8 +110,8 @@ public class TextProgressBar : ProgressBar
         {
             // return _percentageStr;
             // return _percentagePercent;
-            return $"{Value}/{Maximum}";                
-        }            
+            return $"{Value}/{Maximum}";
+        }
     }
     public TextProgressBar()
     {
