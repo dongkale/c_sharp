@@ -174,8 +174,6 @@ public partial class FileDownloader : Form
             downloadItems.Add(item);
             flowLayoutPanel.Controls.Add(item.UI.Panel);
 
-            // Logger.Log($"[FileDownloader_Load] [DownloadList] {url}");
-
             Logger.Log($"[AddDownloadItem] {url} - 다운로드 추가");
         }
 
