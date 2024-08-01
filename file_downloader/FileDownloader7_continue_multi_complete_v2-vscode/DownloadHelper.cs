@@ -21,7 +21,7 @@ public static class DownloadHelper
 
             string checksum = Utils.CalculateMD5FromFile(item.DownloadPath);
 
-            Logger.Log($"[Checksum] {item.DownloadPath} - {checksum}"); ;
+            Logger.Log($"[Checksum] {item.DownloadPath} - {checksum}");
         }
 
         using (HttpClient client = new HttpClient())
@@ -40,8 +40,14 @@ public static class DownloadHelper
                 {
                     item.TotalBytesReceived = totalFileSize;
                     uiUpdater(() => item.UpdateProgress(item.TotalBytesReceived, item.TotalFileSize));
-                    uiUpdater(() => item.UpdateStatus("다운로드 완료된 화일 입니다."));
+                    uiUpdater(() => item.UpdateStatus("다운로드 완료된 파일입니다."));
                     return;
+                }
+
+                // Adjust part count if file is too small
+                if (totalFileSize < partCount)
+                {
+                    partCount = 1;
                 }
 
                 long partSize = totalFileSize / partCount;
@@ -63,6 +69,8 @@ public static class DownloadHelper
             catch (Exception ex)
             {
                 uiUpdater(() => item.UpdateStatus("다운로드 오류: " + ex.Message));
+                // Delete any incomplete part files in case of error
+                DeletePartFiles(item.DownloadPath, partCount);
             }
         }
     }
@@ -125,6 +133,18 @@ public static class DownloadHelper
                     }
                     File.Delete(tempFilePath);
                 }
+            }
+        }
+    }
+
+    private static void DeletePartFiles(string downloadPath, int partCount)
+    {
+        for (int i = 0; i < partCount; i++)
+        {
+            string tempFilePath = $"{downloadPath}.part{i}";
+            if (File.Exists(tempFilePath))
+            {
+                File.Delete(tempFilePath);
             }
         }
     }

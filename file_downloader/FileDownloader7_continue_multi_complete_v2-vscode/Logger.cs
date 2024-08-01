@@ -26,7 +26,7 @@ namespace FileDownloader7
 
             using (StreamWriter writer = new StreamWriter(currentLogFilePath, true))
             {
-                writer.WriteLine($"[Info][{DateTime.Now:HH:mm:ss}] {message}");
+                writer.WriteLine($"[{DateTime.Now:HH:mm:ss}][Info] {message}");
             }
         }
 
@@ -40,7 +40,7 @@ namespace FileDownloader7
 
             using (StreamWriter writer = new StreamWriter(currentLogFilePath, true))
             {
-                writer.WriteLine($"[Error][{DateTime.Now:HH:mm:ss}] {message}");
+                writer.WriteLine($"[{DateTime.Now:HH:mm:ss}][Error] {message}");
             }
         }
 

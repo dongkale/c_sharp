@@ -1,5 +1,6 @@
 namespace FileDownloader7;
 
+using System.Drawing;
 using System.Text.Json;
 
 #pragma warning disable CS8600
@@ -34,12 +35,14 @@ public partial class FileDownloader : Form
         Directory.CreateDirectory(downloadFolder);
 
         // Initialize the overall progress bar
-        // overallProgressBar = new TextProgressBar { Width = 480, Height = 20, VisualMode = ProgressBarDisplayMode.Percentage, Location = new System.Drawing.Point(15, 45) };
+        // overallProgressBar = new TextProgressBar { Width = 480, Height = 20, VisualMode = ProgressBarDisplayMode.Percentage, Location = new Point(15, 45) };
         // this.Controls.Add(overallProgressBar);
     }
 
     private async void btnUpdate_Click(object sender, EventArgs e)
     {
+        btnUpdate.Text = "Checking...";
+        btnUpdate.Enabled = false;
         bool isResult = await FileDownloader_Load();
         if (isResult)
         {
@@ -54,7 +57,7 @@ public partial class FileDownloader : Form
             if (folderDialog.ShowDialog() == DialogResult.OK)
             {
                 downloadFolder = folderDialog.SelectedPath;
-                Logger.Log($"다운로드 폴더 변경: {downloadFolder}");
+                Logger.Log($"[btnSettings_Click] 다운로드 폴더 변경: {downloadFolder}");
             }
         }
     }
@@ -86,14 +89,15 @@ public partial class FileDownloader : Form
     {
         var files = new List<FilePathData>
         {
-            new FilePathData { filePath = DEFAULT_FILE_SERVER_BASE_URL + "/image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
-            new FilePathData { filePath = DEFAULT_FILE_SERVER_BASE_URL + "/image-12/image_12.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
-            new FilePathData { filePath = DEFAULT_FILE_SERVER_BASE_URL + "/image-11/image_11.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
-            new FilePathData { filePath = DEFAULT_FILE_SERVER_BASE_URL + "/image-10/image_10.bin", checksum = "cb3fffcc0e7c5b2874c639a4107b3a6a" },
-            new FilePathData { filePath = DEFAULT_FILE_SERVER_BASE_URL + "/image-09/image_09.bin", checksum = "30eb7e71f05abc3a12ce3fcd589debd6" },
-            new FilePathData { filePath = DEFAULT_FILE_SERVER_BASE_URL + "/image-08/image_08.bin", checksum = "38db288725fa54ccbf0b92a39e69b78a" },
-            new FilePathData { filePath = DEFAULT_FILE_SERVER_BASE_URL + "/image-07/image_07.bin", checksum = "15d24a1d77ccd2f3983a09dec2374004" },
-            new FilePathData { filePath = DEFAULT_FILE_SERVER_BASE_URL + "/image-06/image_06.bin", checksum = "1f7e5a19cb4ace806a37cd72f3cb6172" },            
+            new FilePathData { filePath = "text/text.txt", checksum = "902fbdd2b1df0c4f70b4a5d23525e932" },
+            new FilePathData { filePath = "image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
+            // new FilePathData { filePath = "image-12/image_12.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
+            // new FilePathData { filePath = "image-11/image_11.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
+            // new FilePathData { filePath = "image-10/image_10.bin", checksum = "cb3fffcc0e7c5b2874c639a4107b3a6a" },
+            // new FilePathData { filePath = "image-09/image_09.bin", checksum = "30eb7e71f05abc3a12ce3fcd589debd6" },
+            // new FilePathData { filePath = "image-08/image_08.bin", checksum = "38db288725fa54ccbf0b92a39e69b78a" },
+            // new FilePathData { filePath = "image-07/image_07.bin", checksum = "15d24a1d77ccd2f3983a09dec2374004" },
+            // new FilePathData { filePath = "image-06/image_06.bin", checksum = "1f7e5a19cb4ace806a37cd72f3cb6172" },            
             // new Tuple<string, string>(DEFAULT_FILE_SERVER_BASE_URL + "/image-15/image_15.bin", "a34ee55dbb3aa4ac993eb7454b1f4d15" ),
             // new Tuple<string, string>(DEFAULT_FILE_SERVER_BASE_URL + "/image-12/image_12.bin", "a34ee55dbb3aa4ac993eb7454b1f4d15" ),
             // new Tuple<string, string>(DEFAULT_FILE_SERVER_BASE_URL + "/image-11/image_11.bin", "a34ee55dbb3aa4ac993eb7454b1f4d15" ),
@@ -106,7 +110,7 @@ public partial class FileDownloader : Form
 
         // var urls = new List<string>();
 
-        // string apiUrl = DEFAULT_API_SERVER_BASE_URL + "/" + DOWNLOAD_INFO_API_URL;
+        // string apiUrl = $"{DEFAULT_API_SERVER_BASE_URL}/{DOWNLOAD_INFO_API_URL}";
         // string jsonContent = JsonSerializer.Serialize(
         //     new
         //     {
@@ -124,44 +128,50 @@ public partial class FileDownloader : Form
         //     return false;
         // }
 
-        // foreach (var item in files)
+        // foreach (var file in files)
         // {
-        //     string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{item.filePath}";
+        //     string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{file.filePath}";
 
         //     AddDownloadItem(url);
-
-        //     // Console.WriteLine($" {item.filePath} - {item.checksum}");
         //     Logger.Log($"[DownloadList] {url}");
         // }
 
         // 1. url 유효하지 않으면 다운로드 중단
         // 2. checksum이 일치하지 않으면 다운로드 진행(변경된 파일)
 
+        downloadItems.Clear();
+        // this.Controls.Clear();
+
         foreach (var file in files)
         {
-            var isValidUrl = await Utils.IsDownloadableAsync(file.filePath);
-            var isChecksum = IsChecksum(downloadFolder, file.filePath, file.checksum);
+            string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{file.filePath}";
 
-            Logger.Log($"[=====] {file.filePath} - isValidUrl: {isValidUrl}, isChecksum: {isChecksum}");
+            var isValidUrl = await Utils.IsDownloadableAsync(url);
+            var isChecksum = IsChecksum(downloadFolder, url, file.checksum);
 
-            AddDownloadItem(file.filePath);
-            Logger.Log($"[DownloadList] {file.filePath}");
+            Logger.Log($"[FileDownloader_Load] {url} - isValidUrl: {isValidUrl}, isChecksum: {isChecksum}");
+
+            AddDownloadItem(url);
+            Logger.Log($"[FileDownloader_Load] [DownloadList] {url}");
         }
 
         // Initialize the overall progress bar
-        overallProgressBar = new TextProgressBar { Width = 480, Height = 20, VisualMode = ProgressBarDisplayMode.Percentage, Location = new System.Drawing.Point(15, 45) };
+        overallProgressBar = new TextProgressBar { Width = 480, Height = 20, VisualMode = ProgressBarDisplayMode.Percentage, Location = new Point(15, 45) };
         this.Controls.Add(overallProgressBar);
+
+        btnUpdate.Text = "업데이트";
+        btnUpdate.Enabled = true;
 
         return true;
     }
 
-    private void AddDownloadItem(string url)
+    private bool AddDownloadItem(string url)
     {
         if (downloadItems.Any(x => x.Url == url))
         {
-            MessageBox.Show("이미 추가된 URL입니다.");
+            // MessageBox.Show("이미 추가된 URL입니다.");
             Logger.ErrorLog($"{url} - 이미 추가된 URL입니다.");
-            return;
+            return false;
         }
 
         FileDownloaderItem item = new FileDownloaderItem(url, downloadFolder);
@@ -172,7 +182,9 @@ public partial class FileDownloader : Form
         downloadItems.Add(item);
         flowLayoutPanel.Controls.Add(item.UI.Panel);
 
-        Logger.Log($"{url} - 다운로드 추가");
+        Logger.Log($"[AddDownloadItem] {url} - 다운로드 추가");
+
+        return true;
     }
 
     private bool IsChecksum(string downloadFolder, string url, string checksum)
