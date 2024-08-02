@@ -224,13 +224,16 @@ public partial class FileDownloader : Form
             // AddDownloadItem(url);
             FileDownloaderItem item = new FileDownloaderItem(url, downloadFolder);
 
+            item.InitializeTotalBytesReceived();
+            item.InitializeTotalFileSize(apiKey);
+
             // 화일 크기 얻어서 셋팅 하는 부분이 필요
             // 화일 받다가 중지 된 경우 이어 받기 하기 위해 InitializeTotalBytesReceived()(TotalBytesReceived 셋팅) 실행이 되고
             //   TotalFileSize 는 셋팅이 안되서 UpdateOverallProgress() 에러가남 계산이 안맞음
-            _ = Utils.GetFileSizeAsync(url, apiKey).ContinueWith(task =>
-            {
-                item.TotalFileSize = task.Result;
-            });
+            // _ = Utils.GetFileSizeAsync(url, apiKey).ContinueWith(task =>
+            // {
+            //     item.TotalFileSize = task.Result;
+            // });
 
             item.ProgressUpdated += UpdateOverallProgress;
             item.StatusUpdated += (sender, status) => Logger.Log($"{url} - {status}");

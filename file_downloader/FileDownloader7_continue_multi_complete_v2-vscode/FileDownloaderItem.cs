@@ -40,7 +40,7 @@ public class FileDownloaderItem
         UI = new FileDownloaderUI(url);
 
         // InitializeComponents__();
-        InitializeTotalBytesReceived();
+        // InitializeTotalBytesReceived();
     }
 
     // private void InitializeComponents()
@@ -58,7 +58,7 @@ public class FileDownloaderItem
     //     // Panel.Controls.Add(UrlLabel);
     // }
 
-    private void InitializeTotalBytesReceived()
+    public void InitializeTotalBytesReceived()
     {
         TotalBytesReceived = 0;
         for (int i = 0; ; i++)
@@ -70,6 +70,11 @@ public class FileDownloaderItem
             }
             TotalBytesReceived += new FileInfo(tempFilePath).Length;
         }
+    }
+
+    public async void InitializeTotalFileSize(string apiKey)
+    {
+        TotalFileSize = await Utils.GetFileSizeAsync(Url, apiKey);
     }
 
     public void UpdateProgress(long bytesReceived, long totalBytes)
