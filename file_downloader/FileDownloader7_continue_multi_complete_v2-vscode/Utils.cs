@@ -315,16 +315,13 @@ public static class Utils
         return (true, "Suceess", deserializeResult.ResultData);
     }
 
-    /// <summary>
-    /// 지정한 URL이 다운로드 가능한지 확인합니다.
-    /// </summary>
-    /// <param name="url">확인할 URL</param>
-    /// <returns>다운로드 가능 여부</returns>
-    public static async Task<bool> IsDownloadableAsync(string url)
+    public static async Task<bool> IsDownloadableAsync(string url, string apiKey)
     {
-        try
+        using (HttpClient client = new HttpClient())
         {
-            using (HttpClient client = new HttpClient())
+            client.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
+
+            try
             {
                 // HEAD 요청을 사용하여 파일이 존재하는지 확인
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, url);
@@ -333,13 +330,62 @@ public static class Utils
                 // 상태 코드가 200(OK)인 경우 다운로드 가능
                 return response.StatusCode == System.Net.HttpStatusCode.OK;
             }
-        }
-        catch (Exception ex)
-        {
-            // 예외 발생 시 로그를 남기고 다운로드 불가능으로 간주
-            Logger.ErrorLog($"URL 확인 중 오류 발생: {ex.Message}");
-            return false;
+            catch (Exception ex)
+            {
+                // 예외 발생 시 로그를 남기고 다운로드 불가능으로 간주
+                Logger.ErrorLog($"URL 확인 중 오류 발생: {ex.Message}");
+                return false;
+            }
         }
     }
 
+    public static async Task<long> GetFileSizeAsync(string url, string apiKey)
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            client.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
+
+            try
+            {
+                using (HttpResponseMessage response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url)))
+                {
+                    response.EnsureSuccessStatusCode();
+                    return response.Content.Headers.ContentLength ?? 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error or handle it as necessary
+                Logger.ErrorLog($"Error fetching file size for URL {url}: {ex.Message}");
+                return -1;
+            }
+        }
+    }
+
+    public static (bool, string) DeleteFile(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            // throw new ArgumentException("파일 경로는 비어 있을 수 없습니다.", nameof(filePath));            
+            return (false, $"Empty filePath");
+        }
+
+        if (!File.Exists(filePath))
+        {
+            // Console.WriteLine("지정된 파일이 존재하지 않습니다.");
+            return (false, $"Not Found {filePath}"); ;
+        }
+
+        try
+        {
+            File.Delete(filePath);
+            // Console.WriteLine("파일이 성공적으로 삭제되었습니다.");
+            return (true, "Success");
+        }
+        catch (Exception ex)
+        {
+            // Console.WriteLine($"파일 삭제 중 오류가 발생했습니다: {ex.Message}");
+            return (false, ex.Message);
+        }
+    }
 }

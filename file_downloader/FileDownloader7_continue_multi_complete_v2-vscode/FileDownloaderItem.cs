@@ -29,9 +29,13 @@ public class FileDownloaderItem
     public FileDownloaderItem(string url, string folderPath)
     {
         IsComplete = false;
+
         Url = url;
         FileName = Path.GetFileName(url); ;
         DownloadPath = Path.Combine(folderPath, Path.GetFileName(url));
+
+        TotalBytesReceived = 0;
+        TotalFileSize = 0;
 
         UI = new FileDownloaderUI(url);
 

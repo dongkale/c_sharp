@@ -25,6 +25,7 @@ public partial class FileDownloader : Form
     {
         public string filePath { get; set; } = string.Empty;
         public string checksum { get; set; } = string.Empty;
+        public bool updateStatus { get; set; } = false;
     }
 
 
@@ -41,20 +42,36 @@ public partial class FileDownloader : Form
 
     private async void btnUpdate_Click(object sender, EventArgs e)
     {
-        btnUpdate.Text = "Checking...";
+        btnUpdate.Text = "업데이트 검사...";
         btnUpdate.Enabled = false;
-        bool isResult = await FileDownloader_Load();
-        if (isResult)
+
+        (bool isResult, string message) = await SetupDownload();
+
+        btnUpdate.Text = "업데이트";
+        btnUpdate.Enabled = true;
+
+        if (!isResult)
         {
-            // Initialize the overall progress bar
-            overallProgressBar = new TextProgressBar { Width = 480, Height = 20, VisualMode = ProgressBarDisplayMode.Percentage, Location = new Point(15, 45) };
-            this.Controls.Add(overallProgressBar);
-
-            btnUpdate.Text = "업데이트";
-            btnUpdate.Enabled = true;
-
-            btnDownload.Enabled = true;
+            MessageBox.Show(message);
+            return;
         }
+
+        // this.Controls.Clear();
+
+        overallProgressBar = new TextProgressBar
+        {
+            Width = 480,
+            Height = 20,
+            VisualMode = ProgressBarDisplayMode.Percentage,
+            Location = new Point(15, 45),
+            Maximum = 100,
+            Value = 0
+        };
+
+        this.Controls.Add(overallProgressBar);
+        // this.ResumeLayout(false);
+
+        btnDownload.Enabled = true;
     }
 
     private void btnSettings_Click(object sender, EventArgs e)
@@ -77,8 +94,10 @@ public partial class FileDownloader : Form
             return;
         }
 
-        overallProgressBar.Maximum = 100;
-        overallProgressBar.Value = 0;
+        // overallProgressBar.Maximum = 100;
+        // overallProgressBar.Value = 0;
+
+        btnDownload.Enabled = false;
 
         foreach (var item in downloadItems)
         {
@@ -92,29 +111,28 @@ public partial class FileDownloader : Form
         Logger.Log($"[Load] Start");
     }
 
-    private async Task<bool> FileDownloader_Load()
+    //private async Task<bool> FileDownloader_Load()
+    private async Task<(bool, string)> SetupDownload()
     {
+        string apiKey = DEFAULT_API_KEY;
+
+
         var files = new List<FilePathData>
         {
-            new FilePathData { filePath = "text/text.txt", checksum = "902fbdd2b1df0c4f70b4a5d23525e932" },
-            // new FilePathData { filePath = "image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
+            new FilePathData { filePath = "patch/text01.txt", checksum = "cb08ca4a7bb5f9683c19133a84872ca7", updateStatus = true },
+            new FilePathData { filePath = "patch/text02.txt", checksum = "f38c26a09c89158123f77b474221cc8a", updateStatus = true },
+            new FilePathData { filePath = "patch/text03.txt", checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", updateStatus = true },
+            new FilePathData { filePath = "image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", updateStatus = true },
             // new FilePathData { filePath = "image-12/image_12.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
             // new FilePathData { filePath = "image-11/image_11.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
             // new FilePathData { filePath = "image-10/image_10.bin", checksum = "cb3fffcc0e7c5b2874c639a4107b3a6a" },
-            // new FilePathData { filePath = "image-09/image_09.bin", checksum = "30eb7e71f05abc3a12ce3fcd589debd6" },
+            new FilePathData { filePath = "image-09/image_09.bin", checksum = "30eb7e71f05abc3a12ce3fcd589debd6", updateStatus = true },
             // new FilePathData { filePath = "image-08/image_08.bin", checksum = "38db288725fa54ccbf0b92a39e69b78a" },
             // new FilePathData { filePath = "image-07/image_07.bin", checksum = "15d24a1d77ccd2f3983a09dec2374004" },
-            // new FilePathData { filePath = "image-06/image_06.bin", checksum = "1f7e5a19cb4ace806a37cd72f3cb6172" },            
-            // new Tuple<string, string>(DEFAULT_FILE_SERVER_BASE_URL + "/image-15/image_15.bin", "a34ee55dbb3aa4ac993eb7454b1f4d15" ),
-            // new Tuple<string, string>(DEFAULT_FILE_SERVER_BASE_URL + "/image-12/image_12.bin", "a34ee55dbb3aa4ac993eb7454b1f4d15" ),
-            // new Tuple<string, string>(DEFAULT_FILE_SERVER_BASE_URL + "/image-11/image_11.bin", "a34ee55dbb3aa4ac993eb7454b1f4d15" ),
-            // new Tuple<string, string>(DEFAULT_FILE_SERVER_BASE_URL + "/image-10/image_10.bin", "cb3fffcc0e7c5b2874c639a4107b3a6a" ),
-            // new Tuple<string, string>(DEFAULT_FILE_SERVER_BASE_URL + "/image-09/image_09.bin", "30eb7e71f05abc3a12ce3fcd589debd6" ),
-            // new Tuple<string, string>(DEFAULT_FILE_SERVER_BASE_URL + "/image-08/image_08.bin", "38db288725fa54ccbf0b92a39e69b78a" ),
-            // new Tuple<string, string>(DEFAULT_FILE_SERVER_BASE_URL + "/image-07/image_07.bin", "15d24a1d77ccd2f3983a09dec2374004" ),
-            // new Tuple<string, string>(DEFAULT_FILE_SERVER_BASE_URL + "/image-06/image_06.bin", "1f7e5a19cb4ace806a37cd72f3cb6172" ),
+            // new FilePathData { filePath = "image-06/image_06.bin", checksum = "1f7e5a19cb4ace806a37cd72f3cb6172" },                        
         };
 
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////// 
         // var urls = new List<string>();
 
         // string apiUrl = $"{DEFAULT_API_SERVER_BASE_URL}/{DOWNLOAD_INFO_API_URL}";
@@ -126,7 +144,6 @@ public partial class FileDownloader : Form
         //     }
         // );
 
-        // string apiKey = DEFAULT_API_KEY;
 
         // (bool isResult, string message, List<FilePathData> files) = await Utils.CallApi<List<FilePathData>>(apiUrl, jsonContent, apiKey);
         // if (!isResult)
@@ -134,47 +151,85 @@ public partial class FileDownloader : Form
         //     MessageBox.Show("서버에서 다운로드 정보를 가져올 수 없습니다.");
         //     return false;
         // }
-
-        // foreach (var file in files)
-        // {
-        //     string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{file.filePath}";
-
-        //     AddDownloadItem(url);
-        //     Logger.Log($"[DownloadList] {url}");
-        // }
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
         // 1. url 유효하지 않으면 다운로드 중단
         // 2. checksum이 일치하지 않으면 다운로드 진행(변경된 파일)
+        //        --> 기존에 있는 화일은 오버라이트 ? 아니면 삭제
+        // 3. 
+
+        if (!Directory.Exists(downloadFolder))
+        {
+            Logger.ErrorLog($"[SetupDownload] 다운로드 폴더가 존재하지 않습니다. {downloadFolder}");
+            return (false, $"다운로드 폴더가 존재하지 않습니다. {downloadFolder}");
+        }
+
+        var isValidUrl = false;
+        var inValidUrl = "";
+        foreach (var file in files)
+        {
+            string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{file.filePath}";
+            isValidUrl = await Utils.IsDownloadableAsync(url, apiKey);
+            if (!isValidUrl)
+            {
+                inValidUrl = url;
+                break;
+            }
+        }
+
+        if (!isValidUrl)
+        {
+            Logger.ErrorLog($"[SetupDownload] 유효하지 않은 URL이 포함되어 있습니다. {inValidUrl}");
+            return (false, $"유효하지 않은 URL이 포함되어 있습니다.");
+        }
 
         downloadItems.Clear();
-        flowLayoutPanel.Controls.Clear();
+        panelDownloadList.Controls.Clear();
 
         foreach (var file in files)
         {
             string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{file.filePath}";
-
-            var isValidUrl = await Utils.IsDownloadableAsync(url);
-            var isChecksum = IsChecksum(downloadFolder, url, file.checksum);
-
-            Logger.Log($"[FileDownloader_Load] {url} - isValidUrl: {isValidUrl}, isChecksum: {isChecksum}");
-
-            // AddDownloadItem(url);
-
             if (downloadItems.Any(x => x.Url == url))
             {
                 Logger.ErrorLog($"{url} - 이미 추가된 URL입니다.");
                 continue;
             }
 
+            var downloadFilePath = Path.Combine(downloadFolder, Path.GetFileName(url));
+
+            if (!file.updateStatus)  // 무조건 업데이트가 아니라면
+            {
+                var isChecksum = IsChecksum(downloadFilePath, file.checksum);
+                Logger.Log($"[SetupDownload] {url} - {downloadFilePath} -> Checksum: {isChecksum}[{file.checksum}]");
+
+                if (!isChecksum) // 체크섬이 맞지 않으면 새로 다운로드 받기 위해 삭제한다
+                {
+                    Utils.DeleteFile(downloadFilePath);
+                }
+
+                // 현재 존재하는 화일
+                if (File.Exists(downloadFilePath))
+                {
+                    Logger.Log($"[SetupDownload] {url} - {downloadFilePath} -> Exist");
+                    continue;
+                }
+            }
+
+            // AddDownloadItem(url);
             FileDownloaderItem item = new FileDownloaderItem(url, downloadFolder);
+
+            // 화일 크기 얻어서 셋팅 하는 부분이 필요
+            // 화일 받다가 중지 된 경우 이어 받기 하기 위해 InitializeTotalBytesReceived()(TotalBytesReceived 셋팅) 실행이 되고
+            //   TotalFileSize 는 셋팅이 안되서 UpdateOverallProgress() 에러가남 계산이 안맞음
+            // Utils.GetFileSizeAsync();
 
             item.ProgressUpdated += UpdateOverallProgress;
             item.StatusUpdated += (sender, status) => Logger.Log($"{url} - {status}");
 
             downloadItems.Add(item);
-            flowLayoutPanel.Controls.Add(item.UI.Panel);
+            panelDownloadList.Controls.Add(item.UI.Panel);
 
-            Logger.Log($"[AddDownloadItem] {url} - 다운로드 추가");
+            Logger.Log($"[SetupDownload] {url} - 다운로드 추가");
         }
 
         // // Initialize the overall progress bar
@@ -184,7 +239,12 @@ public partial class FileDownloader : Form
         // btnUpdate.Text = "업데이트";
         // btnUpdate.Enabled = true;
 
-        return true;
+        if (downloadItems.Count <= 0)
+        {
+            return (false, $"모두 업데이트 완료 됐습니다.");
+        }
+
+        return (true, "Success");
     }
 
     // private bool AddDownloadItem(string url)
@@ -202,30 +262,34 @@ public partial class FileDownloader : Form
     //     item.StatusUpdated += (sender, status) => Logger.Log($"{url} - {status}");
 
     //     downloadItems.Add(item);
-    //     flowLayoutPanel.Controls.Add(item.UI.Panel);
+    //     panelDownloadList.Controls.Add(item.UI.Panel);
 
     //     Logger.Log($"[AddDownloadItem] {url} - 다운로드 추가");
 
     //     return true;
     // }
 
-    private bool IsChecksum(string downloadFolder, string url, string checksum)
+    private bool IsChecksum(string downloadFilePath, string checksum)
     {
-        return Utils.CalculateMD5FromFile(Path.Combine(downloadFolder, Path.GetFileName(url))) == checksum;
+        // return Utils.CalculateMD5FromFile(Path.Combine(downloadFolder, Path.GetFileName(url))) == checksum;
+        return Utils.CalculateMD5FromFile(downloadFilePath) == checksum;
     }
 
     private void StartDownload(FileDownloaderItem item)
     {
-        Task.Run(() => DownloadHelper.DownloadFileAsync(item, UpdateUI));
+        string apiKey = DEFAULT_API_KEY;
+
+        Task.Run(() => DownloadHelper.DownloadFileAsync(apiKey, item, UpdateUI));
     }
 
     private void UpdateOverallProgress()
     {
-        long totalBytesReceived = downloadItems.Sum(item => item.TotalBytesReceived);
-        long totalFileSize = downloadItems.Sum(item => item.TotalFileSize);
+        long totalBytesReceived = downloadItems.Where(c => c.TotalFileSize > 0).Sum(item => item.TotalBytesReceived);
+        long totalFileSize = downloadItems.Where(c => c.TotalFileSize > 0).Sum(item => item.TotalFileSize);
 
         int percentage = totalFileSize > 0 ? (int)((double)totalBytesReceived / totalFileSize * 100) : 0;
 
+        // overallProgressBar.Maximum = 100;
         overallProgressBar.Value = percentage;
 
         // if (overallProgressBar.InvokeRequired)

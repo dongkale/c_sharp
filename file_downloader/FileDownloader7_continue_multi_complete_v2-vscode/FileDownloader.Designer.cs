@@ -7,17 +7,10 @@ partial class FileDownloader
     /// </summary>
     private System.ComponentModel.IContainer components = null;
 
-    // private System.Windows.Forms.TextBox txtUrl;
-    // private System.Windows.Forms.Button btnDownload;
-    // private System.Windows.Forms.Button btnSelectFolder;
-    // private System.Windows.Forms.TextBox txtFolder;
-    // private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-    // private System.Windows.Forms.Button btnAddUrl;
-
     private System.Windows.Forms.Button btnUpdate;
     private System.Windows.Forms.Button btnDownload;
     private System.Windows.Forms.Button btnSettings;
-    private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel;
+    private System.Windows.Forms.FlowLayoutPanel panelDownloadList;
 
     private System.Windows.Forms.Button btnTest;
 
@@ -45,7 +38,7 @@ partial class FileDownloader
         this.btnUpdate = new System.Windows.Forms.Button();
         this.btnDownload = new System.Windows.Forms.Button();
         this.btnSettings = new System.Windows.Forms.Button();
-        this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
+        this.panelDownloadList = new System.Windows.Forms.FlowLayoutPanel();
 
         this.btnTest = new System.Windows.Forms.Button();
         this.SuspendLayout();
@@ -98,13 +91,13 @@ partial class FileDownloader
         //////////////////////////////////////////////////////////////////////////////
 
         // 
-        // flowLayoutPanel
+        // panelDownloadList
         // 
-        this.flowLayoutPanel.AutoScroll = true;
-        this.flowLayoutPanel.Location = new System.Drawing.Point(12, 70);
-        this.flowLayoutPanel.Name = "flowLayoutPanel";
-        this.flowLayoutPanel.Size = new System.Drawing.Size(430, 180);
-        this.flowLayoutPanel.TabIndex = 3;
+        this.panelDownloadList.AutoScroll = true;
+        this.panelDownloadList.Location = new System.Drawing.Point(12, 70);
+        this.panelDownloadList.Name = "panelDownloadList";
+        this.panelDownloadList.Size = new System.Drawing.Size(430, 180);
+        this.panelDownloadList.TabIndex = 3;
         // 
         // FileDownloader
         // 
@@ -112,7 +105,7 @@ partial class FileDownloader
         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
         this.ClientSize = new System.Drawing.Size(455, 280); // Adjusted height to accommodate overall progress bar
         this.Controls.Add(this.btnUpdate);
-        this.Controls.Add(this.flowLayoutPanel);
+        this.Controls.Add(this.panelDownloadList);
         this.Controls.Add(this.btnSettings);
         this.Controls.Add(this.btnTest);    // Test
         this.Controls.Add(this.btnDownload);

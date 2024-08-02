@@ -10,22 +10,25 @@ public static class DownloadHelper
 {
     public const int DEFAULT_FILE_PART_COUNT = 4;
 
-    public static async Task DownloadFileAsync(FileDownloaderItem item, Action<Action> uiUpdater, int partCount = DEFAULT_FILE_PART_COUNT)
+    public static async Task DownloadFileAsync(string apiKey, FileDownloaderItem item, Action<Action> uiUpdater, int partCount = DEFAULT_FILE_PART_COUNT)
     {
         long totalFileSize = 0;
         long totalBytesReceived = item.TotalBytesReceived;
+
+        Logger.Log($"[******] {item.Url} - {item.TotalBytesReceived}");
 
         if (File.Exists(item.DownloadPath))
         {
             totalBytesReceived = new FileInfo(item.DownloadPath).Length;
 
             string checksum = Utils.CalculateMD5FromFile(item.DownloadPath);
-
-            Logger.Log($"[Checksum] {item.DownloadPath} - {checksum}");
+            Logger.Log($"[DownloadFileAsync][Checksum] {item.DownloadPath} - {checksum}");
         }
 
         using (HttpClient client = new HttpClient())
         {
+            client.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
+
             try
             {
                 // Get the total file size
@@ -34,14 +37,21 @@ public static class DownloadHelper
                     response.EnsureSuccessStatusCode();
                     totalFileSize = response.Content.Headers.ContentLength ?? 0;
                     item.TotalFileSize = totalFileSize;
+
+                    Logger.Log($"[=====] {item.Url} - {item.TotalFileSize}");
                 }
 
+                // if (totalBytesReceived >= totalFileSize)
+                // {
+                //     item.TotalBytesReceived = totalFileSize;
+                //     uiUpdater(() => item.UpdateProgress(item.TotalBytesReceived, item.TotalFileSize));
+                //     uiUpdater(() => item.UpdateStatus("다운로드 완료된 파일입니다."));
+                //     Logger.Log($"[DownloadFileAsync][Checksum] {item.DownloadPath} - 다운로드 완료된 화일");
+                //     return;
+                // }
                 if (totalBytesReceived >= totalFileSize)
                 {
-                    item.TotalBytesReceived = totalFileSize;
-                    uiUpdater(() => item.UpdateProgress(item.TotalBytesReceived, item.TotalFileSize));
-                    uiUpdater(() => item.UpdateStatus("다운로드 완료된 파일입니다."));
-                    return;
+                    Logger.Log($"[DownloadFileAsync][Checksum] {item.DownloadPath} - 다운로드 완료된 화일");
                 }
 
                 // Adjust part count if file is too small
@@ -56,7 +66,7 @@ public static class DownloadHelper
                 {
                     long start = i * partSize;
                     long end = (i == partCount - 1) ? totalFileSize - 1 : (start + partSize - 1);
-                    downloadTasks.Add(DownloadPartAsync(item, start, end, i, uiUpdater));
+                    downloadTasks.Add(DownloadPartAsync(apiKey, item, start, end, i, uiUpdater));
                 }
 
                 await Task.WhenAll(downloadTasks);
@@ -68,6 +78,7 @@ public static class DownloadHelper
             }
             catch (Exception ex)
             {
+                Logger.ErrorLog($"[DownloadFileAsync] {item.Url} {ex.Message}");
                 uiUpdater(() => item.UpdateStatus("다운로드 오류: " + ex.Message));
                 // Delete any incomplete part files in case of error
                 DeletePartFiles(item.DownloadPath, partCount);
@@ -75,7 +86,7 @@ public static class DownloadHelper
         }
     }
 
-    private static async Task DownloadPartAsync(FileDownloaderItem item, long start, long end, int partIndex, Action<Action> uiUpdater)
+    private static async Task DownloadPartAsync(string apiKey, FileDownloaderItem item, long start, long end, int partIndex, Action<Action> uiUpdater)
     {
         string tempFilePath = $"{item.DownloadPath}.part{partIndex}";
         long existingLength = 0;
@@ -93,6 +104,8 @@ public static class DownloadHelper
 
         using (HttpClient client = new HttpClient())
         {
+            client.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
+
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, item.Url);
             request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(start, end);
             using (HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
