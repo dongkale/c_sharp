@@ -58,15 +58,21 @@ public partial class FileDownloader : Form
 
         // this.Controls.Clear();
 
-        overallProgressBar = new TextProgressBar
+        if (overallProgressBar == null)
         {
-            Width = 480,
-            Height = 20,
-            VisualMode = ProgressBarDisplayMode.Percentage,
-            Location = new Point(15, 45),
-            Maximum = 100,
-            Value = 0
-        };
+            overallProgressBar = new TextProgressBar
+            {
+                Width = 480,
+                Height = 20,
+                VisualMode = ProgressBarDisplayMode.Percentage,
+                Location = new Point(15, 45),
+                Maximum = 100,
+                Value = 0
+            };
+        }
+
+        overallProgressBar.Maximum = 100;
+        overallProgressBar.Value = 0;
 
         this.Controls.Add(overallProgressBar);
         // this.ResumeLayout(false);
@@ -122,7 +128,7 @@ public partial class FileDownloader : Form
             new FilePathData { filePath = "patch/text01.txt", checksum = "cb08ca4a7bb5f9683c19133a84872ca7", updateStatus = true },
             new FilePathData { filePath = "patch/text02.txt", checksum = "f38c26a09c89158123f77b474221cc8a", updateStatus = true },
             new FilePathData { filePath = "patch/text03.txt", checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", updateStatus = true },
-            new FilePathData { filePath = "image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", updateStatus = true },
+            // new FilePathData { filePath = "image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", updateStatus = true },
             // new FilePathData { filePath = "image-12/image_12.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
             // new FilePathData { filePath = "image-11/image_11.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
             // new FilePathData { filePath = "image-10/image_10.bin", checksum = "cb3fffcc0e7c5b2874c639a4107b3a6a" },
@@ -221,7 +227,10 @@ public partial class FileDownloader : Form
             // 화일 크기 얻어서 셋팅 하는 부분이 필요
             // 화일 받다가 중지 된 경우 이어 받기 하기 위해 InitializeTotalBytesReceived()(TotalBytesReceived 셋팅) 실행이 되고
             //   TotalFileSize 는 셋팅이 안되서 UpdateOverallProgress() 에러가남 계산이 안맞음
-            // Utils.GetFileSizeAsync();
+            _ = Utils.GetFileSizeAsync(url, apiKey).ContinueWith(task =>
+            {
+                item.TotalFileSize = task.Result;
+            });
 
             item.ProgressUpdated += UpdateOverallProgress;
             item.StatusUpdated += (sender, status) => Logger.Log($"{url} - {status}");
@@ -284,8 +293,11 @@ public partial class FileDownloader : Form
 
     private void UpdateOverallProgress()
     {
-        long totalBytesReceived = downloadItems.Where(c => c.TotalFileSize > 0).Sum(item => item.TotalBytesReceived);
-        long totalFileSize = downloadItems.Where(c => c.TotalFileSize > 0).Sum(item => item.TotalFileSize);
+        // long totalBytesReceived = downloadItems.Where(item => item.TotalBytesReceived < item.TotalFileSize).Sum(item => item.TotalBytesReceived);
+        // long totalFileSize = downloadItems.Where(item => item.TotalBytesReceived < item.TotalFileSize).Sum(item => item.TotalFileSize);
+
+        long totalBytesReceived = downloadItems.Sum(item => item.TotalBytesReceived);
+        long totalFileSize = downloadItems.Sum(item => item.TotalFileSize);
 
         int percentage = totalFileSize > 0 ? (int)((double)totalBytesReceived / totalFileSize * 100) : 0;
 
