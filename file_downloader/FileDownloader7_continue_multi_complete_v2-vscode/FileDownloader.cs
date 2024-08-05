@@ -14,7 +14,10 @@ public partial class FileDownloader : Form
     public const int DEFAULT_FILE_PART_COUNT = 4;
     public const string DEFAULT_API_KEY = "1ab2c3d4e5f61ab2c3d4e5f6";
 
-    public const string DOWNLOAD_INFO_API_URL = "download-file/info";
+    public const string PATCH_INFO_API_PATH = "patch/info";
+
+    // public const string PATCH_FILE_DOWNLOAD_PATH = "patch/download";
+    public const string PATCH_FILE_DOWNLOAD_PATH = "patch";
 
     private List<FileDownloaderItem> downloadItems = new List<FileDownloaderItem>();
     private string downloadFolder = DEFAULT_DOWNLOAD_FOLDER;
@@ -23,9 +26,11 @@ public partial class FileDownloader : Form
 
     public class FilePathData
     {
-        public string filePath { get; set; } = string.Empty;
+        public string version { get; set; } = string.Empty;
+        public string fileName { get; set; } = string.Empty;
+        public long fileSize { get; set; } = 0;
         public string checksum { get; set; } = string.Empty;
-        public bool updateStatus { get; set; } = false;
+        public bool forceUpdate { get; set; } = false;
     }
 
 
@@ -125,14 +130,19 @@ public partial class FileDownloader : Form
 
         var files = new List<FilePathData>
         {
-            new FilePathData { filePath = "patch/text01.txt", checksum = "cb08ca4a7bb5f9683c19133a84872ca7", updateStatus = true },
-            new FilePathData { filePath = "patch/text02.txt", checksum = "f38c26a09c89158123f77b474221cc8a", updateStatus = true },
-            new FilePathData { filePath = "patch/text03.txt", checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", updateStatus = true },
-            // new FilePathData { filePath = "image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", updateStatus = true },
+            new FilePathData { fileName = "text01.txt", fileSize = 4, checksum = "cb08ca4a7bb5f9683c19133a84872ca7", forceUpdate = true },
+            new FilePathData { fileName = "text02.txt", fileSize = 48, checksum = "f38c26a09c89158123f77b474221cc8a", forceUpdate = true },
+            new FilePathData { fileName = "text03.txt", fileSize = 334564, checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", forceUpdate = true },
+            new FilePathData { fileName = "image_11.bin", fileSize = 675888392, checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", forceUpdate = true },
+            new FilePathData { fileName = "image_09.bin", fileSize = 80876324, checksum = "30eb7e71f05abc3a12ce3fcd589debd6", forceUpdate = true },
+
+
+
+            // new FilePathData { filePath = "image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", forceUpdate = true },
             // new FilePathData { filePath = "image-12/image_12.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
             // new FilePathData { filePath = "image-11/image_11.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
             // new FilePathData { filePath = "image-10/image_10.bin", checksum = "cb3fffcc0e7c5b2874c639a4107b3a6a" },
-            new FilePathData { filePath = "image-09/image_09.bin", checksum = "30eb7e71f05abc3a12ce3fcd589debd6", updateStatus = true },
+            // new FilePathData { fileName = "image-09/image_09.bin", checksum = "30eb7e71f05abc3a12ce3fcd589debd6", forceUpdate = true },
             // new FilePathData { filePath = "image-08/image_08.bin", checksum = "38db288725fa54ccbf0b92a39e69b78a" },
             // new FilePathData { filePath = "image-07/image_07.bin", checksum = "15d24a1d77ccd2f3983a09dec2374004" },
             // new FilePathData { filePath = "image-06/image_06.bin", checksum = "1f7e5a19cb4ace806a37cd72f3cb6172" },                        
@@ -141,7 +151,7 @@ public partial class FileDownloader : Form
         //////////////////////////////////////////////////////////////////////////////////////////////////////////// 
         // var urls = new List<string>();
 
-        // string apiUrl = $"{DEFAULT_API_SERVER_BASE_URL}/{DOWNLOAD_INFO_API_URL}";
+        // string apiUrl = $"{DEFAULT_API_SERVER_BASE_URL}/{PATCH_INFO_API_PATH}";
         // string jsonContent = JsonSerializer.Serialize(
         //     new
         //     {
@@ -174,8 +184,8 @@ public partial class FileDownloader : Form
         var inValidUrl = "";
         foreach (var file in files)
         {
-            string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{file.filePath}";
-            isValidUrl = await Utils.IsDownloadableAsync(url, apiKey);
+            string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{file.fileName}";
+            isValidUrl = await DownloadHelper.IsDownloadableAsync(url, apiKey);
             if (!isValidUrl)
             {
                 inValidUrl = url;
@@ -194,7 +204,7 @@ public partial class FileDownloader : Form
 
         foreach (var file in files)
         {
-            string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{file.filePath}";
+            string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{file.fileName}";
             if (downloadItems.Any(x => x.Url == url))
             {
                 Logger.ErrorLog($"{url} - 이미 추가된 URL입니다.");
@@ -203,7 +213,7 @@ public partial class FileDownloader : Form
 
             var downloadFilePath = Path.Combine(downloadFolder, Path.GetFileName(url));
 
-            if (!file.updateStatus)  // 무조건 업데이트가 아니라면
+            if (!file.forceUpdate)  // 무조건 업데이트가 아니라면
             {
                 var isChecksum = IsChecksum(downloadFilePath, file.checksum);
                 Logger.Log($"[SetupDownload] {url} - {downloadFilePath} -> Checksum: {isChecksum}[{file.checksum}]");
@@ -225,12 +235,14 @@ public partial class FileDownloader : Form
             FileDownloaderItem item = new FileDownloaderItem(url, downloadFolder);
 
             item.InitializeTotalBytesReceived();
-            item.InitializeTotalFileSize(apiKey);
+            // item.InitializeTotalFileSize(apiKey);
+
+            item.TotalFileSize = file.fileSize;
 
             // 화일 크기 얻어서 셋팅 하는 부분이 필요
             // 화일 받다가 중지 된 경우 이어 받기 하기 위해 InitializeTotalBytesReceived()(TotalBytesReceived 셋팅) 실행이 되고
             //   TotalFileSize 는 셋팅이 안되서 UpdateOverallProgress() 에러가남 계산이 안맞음
-            // _ = Utils.GetFileSizeAsync(url, apiKey).ContinueWith(task =>
+            // _ = DownloadHelper.GetFileSizeAsync(url, apiKey).ContinueWith(task =>
             // {
             //     item.TotalFileSize = task.Result;
             // });
@@ -359,7 +371,7 @@ public partial class FileDownloader : Form
 
         try
         {
-            string url = DEFAULT_API_SERVER_BASE_URL + "/download-file/info";
+            string urlApiServer = DEFAULT_API_SERVER_BASE_URL + "/" + PATCH_INFO_API_PATH;
 
             // case 1
             // string jsonContent = "{\"key1\":\"value\", \"key\":\"value2\"}";
@@ -432,7 +444,7 @@ public partial class FileDownloader : Form
             // }
 
             // -- case 3
-            (bool isResult, string resuleMessage, List<FilePathData> resultData) = await Utils.CallApi<List<FilePathData>>(url, jsonContent, apiKey);
+            (bool isResult, string resuleMessage, List<FilePathData> resultData) = await Utils.CallApi<List<FilePathData>>(urlApiServer, jsonContent, apiKey);
             if (!isResult)
             {
                 MessageBox.Show("서버에서 다운로드 정보를 가져올 수 없습니다.");
@@ -442,8 +454,14 @@ public partial class FileDownloader : Form
 
             foreach (var item in resultData)
             {
-                Console.WriteLine($" {item.filePath} - {item.checksum}");
-                Logger.Log($" {item.filePath} - {item.checksum}");
+                string urlDownloadServer = $"{DEFAULT_FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{item.fileName}";
+                bool isValidUrl = await DownloadHelper.IsDownloadableAsync(urlDownloadServer, apiKey);
+
+                // string urlDownloadServer__ = $"{DEFAULT_FILE_SERVER_BASE_URL}/patch/{item.fileName}";
+                long TotalFileSize = await DownloadHelper.GetFileSizeAsync(urlDownloadServer, apiKey);
+
+                // Console.WriteLine($"{item.version},  {item.fileName}, {item.checksum}, {item.forceUpdate}");
+                Logger.Log($"version: {item.version},  fileName: {item.fileName}, checksum: {item.checksum}, forceUpdate: {item.forceUpdate}, isdownload: {isValidUrl}");
             }
 
             // Logger.Log($"{response}");

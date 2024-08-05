@@ -74,12 +74,11 @@ public class FileDownloaderItem
 
     public async void InitializeTotalFileSize(string apiKey)
     {
-        TotalFileSize = await Utils.GetFileSizeAsync(Url, apiKey);
-
-        // _ = Utils.GetFileSizeAsync(Url, apiKey).ContinueWith(task =>
-        // {
-        //     TotalFileSize = task.Result;
-        // });
+        // TotalFileSize = await DownloadHelper.GetFileSizeAsync(Url, apiKey);
+        await DownloadHelper.GetFileSizeAsync(Url, apiKey).ContinueWith(task =>
+        {
+            TotalFileSize = task.Result;
+        });
     }
 
     public void UpdateProgress(long bytesReceived, long totalBytes)

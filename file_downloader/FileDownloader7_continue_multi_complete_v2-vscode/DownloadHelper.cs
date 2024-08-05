@@ -161,4 +161,51 @@ public static class DownloadHelper
             }
         }
     }
+
+    public static async Task<bool> IsDownloadableAsync(string url, string apiKey)
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            client.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
+
+            try
+            {
+                // HEAD 요청을 사용하여 파일이 존재하는지 확인
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, url);
+                HttpResponseMessage response = await client.SendAsync(request);
+
+                // 상태 코드가 200(OK)인 경우 다운로드 가능
+                return response.StatusCode == System.Net.HttpStatusCode.OK;
+            }
+            catch (Exception ex)
+            {
+                // 예외 발생 시 로그를 남기고 다운로드 불가능으로 간주
+                Logger.ErrorLog($"URL 확인 중 오류 발생: {ex.Message}");
+                return false;
+            }
+        }
+    }
+
+    public static async Task<long> GetFileSizeAsync(string url, string apiKey)
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            client.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
+
+            try
+            {
+                using (HttpResponseMessage response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url)))
+                {
+                    response.EnsureSuccessStatusCode();
+                    return response.Content.Headers.ContentLength ?? 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error or handle it as necessary
+                Logger.ErrorLog($"Error fetching file size for URL {url}: {ex.Message}");
+                return -1;
+            }
+        }
+    }
 }

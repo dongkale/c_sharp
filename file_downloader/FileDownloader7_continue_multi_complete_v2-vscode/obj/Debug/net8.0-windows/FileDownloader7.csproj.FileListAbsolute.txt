@@ -1,0 +1,15 @@
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\bin\Debug\net8.0-windows\FileDownloader7.exe
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\bin\Debug\net8.0-windows\FileDownloader7.deps.json
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\bin\Debug\net8.0-windows\FileDownloader7.runtimeconfig.json
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\bin\Debug\net8.0-windows\FileDownloader7.dll
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\bin\Debug\net8.0-windows\FileDownloader7.pdb
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\obj\Debug\net8.0-windows\FileDownloader7.GeneratedMSBuildEditorConfig.editorconfig
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\obj\Debug\net8.0-windows\FileDownloader7.AssemblyInfoInputs.cache
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\obj\Debug\net8.0-windows\FileDownloader7.AssemblyInfo.cs
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\obj\Debug\net8.0-windows\FileDownloader7.csproj.CoreCompileInputs.cache
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\obj\Debug\net8.0-windows\FileDownloader7.sourcelink.json
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\obj\Debug\net8.0-windows\FileDownloader7.dll
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\obj\Debug\net8.0-windows\refint\FileDownloader7.dll
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\obj\Debug\net8.0-windows\FileDownloader7.pdb
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\obj\Debug\net8.0-windows\FileDownloader7.genruntimeconfig.cache
+D:\LDK_Work\Source\c_sharp\file_downloader\FileDownloader7_continue_multi_complete_v2-vscode\obj\Debug\net8.0-windows\ref\FileDownloader7.dll
