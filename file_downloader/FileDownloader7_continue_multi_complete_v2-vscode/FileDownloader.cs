@@ -1,5 +1,6 @@
 namespace FileDownloader7;
 
+using System.Diagnostics;
 using System.Drawing;
 using System.Text.Json;
 
@@ -8,15 +9,28 @@ using System.Text.Json;
 
 public partial class FileDownloader : Form
 {
-    public const string DEFAULT_FILE_SERVER_BASE_URL = "http://localhost:3050";
-    public const string DEFAULT_API_SERVER_BASE_URL = "http://localhost:3050";
+    // public enum DownloadStatus
+    // {
+    //     Error = 0,   // 다운로드 오류
+    //     ListAdded,   // 다운로드 추가
+    //     Downloading, // 다운로드 진행중
+    //     Complete,   // 다운로드 완료
+    //     Completed,  // 이미 다운로드 완료
+    // }
+
+    public const string DOWNLOAD_INFO_FILE = "newest.txt";
+    public const string DOWNLOAD_LIST_LOCAL_SAVE_FILE = ".newest.json";
+
+    public const string FILE_SERVER_BASE_URL = "http://localhost:3050";
+    public const string API_SERVER_BASE_URL = "http://localhost:3050";
+
     public const string DEFAULT_DOWNLOAD_FOLDER = "C:\\downloadedFiles";
     public const int DEFAULT_FILE_PART_COUNT = 4;
     public const string DEFAULT_API_KEY = "1ab2c3d4e5f61ab2c3d4e5f6";
 
     public const string PATCH_INFO_API_PATH = "patch/info";
 
-    // public const string PATCH_FILE_DOWNLOAD_PATH = "patch/download";
+    // public const string PATCH_FILE_DOWNLOAD_PATH = "patch/download__";
     public const string PATCH_FILE_DOWNLOAD_PATH = "patch";
 
     private List<FileDownloaderItem> downloadItems = new List<FileDownloaderItem>();
@@ -24,15 +38,128 @@ public partial class FileDownloader : Form
 
     private TextProgressBar overallProgressBar = default!; // Overall progress bar
 
-    public class FilePathData
+    // 0.1,text01.txt,0,cb08ca4a7bb5f9683c19133a84872ca7,0
+    public class DownloadInfo
     {
+        public const int DEFAULT_ELEMENT_COUNT = 5;
+
         public string version { get; set; } = string.Empty;
         public string fileName { get; set; } = string.Empty;
         public long fileSize { get; set; } = 0;
         public string checksum { get; set; } = string.Empty;
         public bool forceUpdate { get; set; } = false;
-    }
 
+        // public static List<DownloadInfo> __parseDownloadInfoFileContent(string fileContent)
+        // {
+        //     string[] lines = fileContent.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+        //     if (lines.Length == 0)
+        //     {
+        //         return [];
+        //     }
+
+        //     var files = new List<DownloadInfo>();
+
+        //     foreach (var str in lines)
+        //     {
+        //         var (version, file, fileSize, checksum, forseUpdate) = str.Split(',') switch
+        //         {
+        //             var s when s.Length == 5 => (s[0], s[1], long.Parse(s[2]), s[3], Utils.StringToBoolean(s[4])),
+        //             _ => (string.Empty, string.Empty, 0, string.Empty, false)
+        //         };
+
+        //         files.Add(new DownloadInfo { version = version, fileName = file, fileSize = fileSize, checksum = checksum, forceUpdate = forseUpdate });
+        //         // Logger.Log($"file:{file}, checksum:{checksum}, fileSize:{fileSize}, forseUpdate:{forseUpdate}");
+        //     }
+
+        //     return files;
+        // }
+
+        public static (bool, string, List<DownloadInfo>) parseDownloadInfoFileContent(string fileContent)
+        {
+            string[] lines = fileContent.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            if (lines.Length == 0)
+            {
+                return (false, "Split Fail", []);
+            }
+
+            var files = new List<DownloadInfo>();
+
+            bool isvalid = false;
+            string message = "Success";
+
+            int lineCount = 1;
+
+            try
+            {
+                foreach (var line in lines)
+                {
+                    var splitString = line.Split(',');
+                    if (splitString.Length != DownloadInfo.DEFAULT_ELEMENT_COUNT)
+                    {
+                        isvalid = false;
+                        message = $"Invalid Argument. [line:{lineCount}]";
+                        break;
+                    }
+
+                    var version = splitString[0];
+                    if (String.IsNullOrEmpty(version))
+                    {
+                        isvalid = false;
+                        message = $"Invalid Version. [line:{lineCount}]";
+                        break;
+                    }
+
+                    var file = splitString[1];
+                    if (String.IsNullOrEmpty(file))
+                    {
+                        isvalid = false;
+                        message = $"Invalid File Name. [line:{lineCount}]";
+                        break;
+                    }
+
+                    if (!long.TryParse(splitString[2], out long fileSize))
+                    {
+                        isvalid = false;
+                        message = $"Invalid File Size. [line:{lineCount}]";
+                        break;
+                    }
+
+                    var checksum = splitString[3];
+                    if (String.IsNullOrEmpty(checksum))
+                    {
+                        isvalid = false;
+                        message = $"Invalid Checksum. [line:{lineCount}]";
+                        break;
+                    }
+
+                    var forceUpdate = Utils.StringToBoolean(splitString[4]);
+
+                    files.Add(new DownloadInfo { version = version, fileName = file, fileSize = fileSize, checksum = checksum, forceUpdate = forceUpdate });
+                    lineCount++;
+                }
+            }
+            catch (FormatException)
+            {
+                isvalid = false;
+                message = $"Invalid format for conversion. [line:{lineCount}]";
+                Console.WriteLine(message);
+            }
+            catch (OverflowException)
+            {
+                isvalid = false;
+                message = $"The number is too large for a long. [line:{lineCount}]";
+                Console.WriteLine(message);
+            }
+            catch (Exception e)
+            {
+                isvalid = false;
+                message = $"An exception occurred: {e.Message}. [line:{lineCount}]";
+                Console.WriteLine(message);
+            }
+
+            return (isvalid, message, files);
+        }
+    }
 
     public FileDownloader()
     {
@@ -43,6 +170,26 @@ public partial class FileDownloader : Form
         // Initialize the overall progress bar
         // overallProgressBar = new TextProgressBar { Width = 480, Height = 20, VisualMode = ProgressBarDisplayMode.Percentage, Location = new Point(15, 45) };
         // this.Controls.Add(overallProgressBar);
+    }
+
+    public string GetDownloadListSaveFile()
+    {
+        return $"{DEFAULT_DOWNLOAD_FOLDER}/{DOWNLOAD_LIST_LOCAL_SAVE_FILE}";
+    }
+
+    public string GetDownloadInfoFile()
+    {
+        return $"{FILE_SERVER_BASE_URL}/{DOWNLOAD_INFO_FILE}";
+    }
+
+    public string GetDownloadFilePath(string fileName)
+    {
+        return $"{FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{fileName}";
+    }
+
+    public string GetApiServerUrl()
+    {
+        return $"{API_SERVER_BASE_URL}/{PATCH_INFO_API_PATH}";
     }
 
     private async void btnUpdate_Click(object sender, EventArgs e)
@@ -83,6 +230,7 @@ public partial class FileDownloader : Form
         // this.ResumeLayout(false);
 
         btnDownload.Enabled = true;
+        btnDownload.Focus();
     }
 
     private void btnSettings_Click(object sender, EventArgs e)
@@ -122,52 +270,62 @@ public partial class FileDownloader : Form
         Logger.Log($"[Load] Start");
     }
 
-    //private async Task<bool> FileDownloader_Load()
     private async Task<(bool, string)> SetupDownload()
     {
         string apiKey = DEFAULT_API_KEY;
 
-
-        var files = new List<FilePathData>
+        var files = new List<DownloadInfo>
         {
-            new FilePathData { fileName = "text01.txt", fileSize = 4, checksum = "cb08ca4a7bb5f9683c19133a84872ca7", forceUpdate = true },
-            new FilePathData { fileName = "text02.txt", fileSize = 48, checksum = "f38c26a09c89158123f77b474221cc8a", forceUpdate = true },
-            new FilePathData { fileName = "text03.txt", fileSize = 334564, checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", forceUpdate = true },
-            new FilePathData { fileName = "image_11.bin", fileSize = 675888392, checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", forceUpdate = true },
-            new FilePathData { fileName = "image_09.bin", fileSize = 80876324, checksum = "30eb7e71f05abc3a12ce3fcd589debd6", forceUpdate = true },
+            new DownloadInfo { version = "0.1", fileName = "text01.txt", fileSize = 4, checksum = "cb08ca4a7bb5f9683c19133a84872ca7", forceUpdate = true },
+            new DownloadInfo { version = "0.1", fileName = "text02.txt", fileSize = 48, checksum = "f38c26a09c89158123f77b474221cc8a", forceUpdate = true },
+            new DownloadInfo { version = "0.1", fileName = "text03.txt", fileSize = 334564, checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", forceUpdate = true },
+            new DownloadInfo { version = "0.1", fileName = "text04.txt", fileSize = 334564, checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", forceUpdate = true },
+            new DownloadInfo { version = "0.1", fileName = "image_11.bin", fileSize = 675888392, checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", forceUpdate = true },
+            new DownloadInfo { version = "0.1", fileName = "image_09.bin", fileSize = 80876324, checksum = "30eb7e71f05abc3a12ce3fcd589debd6", forceUpdate = true },
 
 
 
-            // new FilePathData { filePath = "image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", forceUpdate = true },
-            // new FilePathData { filePath = "image-12/image_12.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
-            // new FilePathData { filePath = "image-11/image_11.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
-            // new FilePathData { filePath = "image-10/image_10.bin", checksum = "cb3fffcc0e7c5b2874c639a4107b3a6a" },
-            // new FilePathData { fileName = "image-09/image_09.bin", checksum = "30eb7e71f05abc3a12ce3fcd589debd6", forceUpdate = true },
-            // new FilePathData { filePath = "image-08/image_08.bin", checksum = "38db288725fa54ccbf0b92a39e69b78a" },
-            // new FilePathData { filePath = "image-07/image_07.bin", checksum = "15d24a1d77ccd2f3983a09dec2374004" },
-            // new FilePathData { filePath = "image-06/image_06.bin", checksum = "1f7e5a19cb4ace806a37cd72f3cb6172" },                        
+            // new DownloadInfo { filePath = "image-15/image_15.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", forceUpdate = true },
+            // new DownloadInfo { filePath = "image-12/image_12.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
+            // new DownloadInfo { filePath = "image-11/image_11.bin", checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15" },
+            // new DownloadInfo { filePath = "image-10/image_10.bin", checksum = "cb3fffcc0e7c5b2874c639a4107b3a6a" },
+            // new DownloadInfo { fileName = "image-09/image_09.bin", checksum = "30eb7e71f05abc3a12ce3fcd589debd6", forceUpdate = true },
+            // new DownloadInfo { filePath = "image-08/image_08.bin", checksum = "38db288725fa54ccbf0b92a39e69b78a" },
+            // new DownloadInfo { filePath = "image-07/image_07.bin", checksum = "15d24a1d77ccd2f3983a09dec2374004" },
+            // new DownloadInfo { filePath = "image-06/image_06.bin", checksum = "1f7e5a19cb4ace806a37cd72f3cb6172" },                        
         };
 
+        var saveDownloadInfo = DownloadHelper.ReadFromJsonFile<List<DownloadInfo>>($"{DEFAULT_DOWNLOAD_FOLDER}/{DOWNLOAD_LIST_LOCAL_SAVE_FILE}");
+        if (saveDownloadInfo.Count > 0)
+        {
+            Console.WriteLine(Utils.ToJsonString(saveDownloadInfo));
+            Logger.Log($"[SetupDownload] SavedDownloadInfo: {Utils.ToJsonString(saveDownloadInfo)}");
+        }
+
         //////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-        // var urls = new List<string>();
+        var urls = new List<string>();
 
-        // string apiUrl = $"{DEFAULT_API_SERVER_BASE_URL}/{PATCH_INFO_API_PATH}";
-        // string jsonContent = JsonSerializer.Serialize(
-        //     new
-        //     {
-        //         key1 = "items1",
-        //         key2 = "items2"
-        //     }
-        // );
+        // string apiUrl = $"{API_SERVER_BASE_URL}/{PATCH_INFO_API_PATH}";
+        string apiUrl = GetApiServerUrl();
+        string jsonContent = JsonSerializer.Serialize(
+            new
+            {
+                key1 = "items1",
+                key2 = "items2"
+            }
+        );
 
 
-        // (bool isResult, string message, List<FilePathData> files) = await Utils.CallApi<List<FilePathData>>(apiUrl, jsonContent, apiKey);
-        // if (!isResult)
-        // {
-        //     MessageBox.Show("서버에서 다운로드 정보를 가져올 수 없습니다.");
-        //     return false;
-        // }
+        (bool isResult, string message, List<DownloadInfo> files__) = await Utils.CallApi<List<DownloadInfo>>(apiUrl, jsonContent, apiKey);
+        if (!isResult || files__.Count == 0)
+        {
+            // MessageBox.Show("서버에서 다운로드 정보를 가져올 수 없습니다.");            
+            return (false, $"서버에서 다운로드 정보를 가져올 수 없습니다. {downloadFolder}");
+        }
         //////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+        ///
+        DownloadHelper.WriteToJsonFile<List<DownloadInfo>>($"{DEFAULT_DOWNLOAD_FOLDER}/{DOWNLOAD_LIST_LOCAL_SAVE_FILE}", files);
+        ///
 
         // 1. url 유효하지 않으면 다운로드 중단
         // 2. checksum이 일치하지 않으면 다운로드 진행(변경된 파일)
@@ -184,7 +342,9 @@ public partial class FileDownloader : Form
         var inValidUrl = "";
         foreach (var file in files)
         {
-            string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{file.fileName}";
+            string url = $"{FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{file.fileName}";
+            string url__ = GetDownloadFilePath(file.fileName);
+
             isValidUrl = await DownloadHelper.IsDownloadableAsync(url, apiKey);
             if (!isValidUrl)
             {
@@ -204,7 +364,8 @@ public partial class FileDownloader : Form
 
         foreach (var file in files)
         {
-            string url = $"{DEFAULT_FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{file.fileName}";
+            string url = $"{FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{file.fileName}";
+            string url__ = GetDownloadFilePath(file.fileName);
             if (downloadItems.Any(x => x.Url == url))
             {
                 Logger.ErrorLog($"{url} - 이미 추가된 URL입니다.");
@@ -235,9 +396,9 @@ public partial class FileDownloader : Form
             FileDownloaderItem item = new FileDownloaderItem(url, downloadFolder);
 
             item.InitializeTotalBytesReceived();
-            // item.InitializeTotalFileSize(apiKey);
+            item.InitializeTotalFileSize(apiKey);
 
-            item.TotalFileSize = file.fileSize;
+            // item.TotalFileSize = file.fileSize;
 
             // 화일 크기 얻어서 셋팅 하는 부분이 필요
             // 화일 받다가 중지 된 경우 이어 받기 하기 위해 InitializeTotalBytesReceived()(TotalBytesReceived 셋팅) 실행이 되고
@@ -248,12 +409,12 @@ public partial class FileDownloader : Form
             // });
 
             item.ProgressUpdated += UpdateOverallProgress;
-            item.StatusUpdated += (sender, status) => Logger.Log($"{url} - {status}");
+            item.StatusUpdated += (sender, status) => Logger.Log($"[StatusUpdated][{url}] {status}");
 
             downloadItems.Add(item);
             panelDownloadList.Controls.Add(item.UI.Panel);
 
-            Logger.Log($"[SetupDownload] {url} - 다운로드 추가");
+            Logger.Log($"[SetupDownload][{url}] 다운로드 추가");
         }
 
         // // Initialize the overall progress bar
@@ -353,17 +514,38 @@ public partial class FileDownloader : Form
 
     private async void btnTest_Click(object sender, EventArgs e)
     {
-        // string downloadUrl = "http://localhost:3030/newest.txt"; // 5a1000e8775ccb62e436468adcbfb243
+        string downloadUrl = $"{FILE_SERVER_BASE_URL}/{DOWNLOAD_INFO_FILE}"; // 5a1000e8775ccb62e436468adcbfb243
+        string apiKey = DEFAULT_API_KEY;
         // // string downloadUrl = "http://localhost:3030/image-12/image_12.bin"; // a34ee55dbb3aa4ac993eb7454b1f4d15
 
         // string s = Utils.CalculateMD5FromFile("C:\\downloadedFiles\\image_10.bin");
 
-        // (bool result, string content) = await Utils.GetFileContentAsync(downloadUrl);
+        (bool result, string content) = await DownloadHelper.GetFileContentAsync(downloadUrl, apiKey);
 
         // string s2 = Utils.CalculateMD5FromString(content);
 
         // // 다운로드한 콘텐츠를 텍스트 박스에 표시        
-        // string[] lines = content.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+        string[] lines = content.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+
+        foreach (var line in lines)
+        {
+            var (file, checksum, fileSize, forseUpdate) = line.Split(',') switch
+            {
+                var s when s.Length == 4 => (s[0], s[1], long.Parse(s[2]), Utils.StringToBoolean(s[3])), // bool.Parse(s[3])),
+                _ => (string.Empty, string.Empty, 0, false)
+            };
+
+            Logger.Log($"file:{file}, checksum:{checksum}, fileSize:{fileSize}, forseUpdate:{forseUpdate}");
+        }
+
+        // var lists = DownloadInfo.__parseDownloadInfoFileContent(content);
+
+        var lists = DownloadInfo.parseDownloadInfoFileContent(content);
+
+        DownloadHelper.WriteToJsonFile<List<DownloadInfo>>($"{DEFAULT_DOWNLOAD_FOLDER}/{DOWNLOAD_LIST_LOCAL_SAVE_FILE}", lists.Item3);
+
+        // var myString = "text01.txt,cb08ca4a7bb5f9683c19133a84872ca7,4,0";
+        // var (file, checksum, fileSize, forseUpdate) = myString.Split(',') switch { var a => (a[0], a[1], a[2], a[3]) };
 
         // string s3 = await Utils.CalculateMD5FromUrlAsync("http://localhost:3030/image-12/image_12.bin");
 
@@ -371,7 +553,8 @@ public partial class FileDownloader : Form
 
         try
         {
-            string urlApiServer = DEFAULT_API_SERVER_BASE_URL + "/" + PATCH_INFO_API_PATH;
+            // string urlApiServer = API_SERVER_BASE_URL + "/" + PATCH_INFO_API_PATH;
+            string urlApiServer = GetApiServerUrl();
 
             // case 1
             // string jsonContent = "{\"key1\":\"value\", \"key\":\"value2\"}";
@@ -393,7 +576,7 @@ public partial class FileDownloader : Form
                 }
             );
 
-            string apiKey = DEFAULT_API_KEY;
+            // string apiKey = DEFAULT_API_KEY;
 
             // --- case 1
             // (bool result, string response) = await Utils.PostAsync(url, jsonContent, apiKey);
@@ -404,7 +587,7 @@ public partial class FileDownloader : Form
             // }
 
             // // null 리터럴 또는 가능한 null 값을 null을 허용하지 않는 형식으로 변환하는 중입니다.
-            // ResponseData<FilePathData> r = JsonSerializer.Deserialize<ResponseData<FilePathData>>(response);
+            // ResponseData<DownloadInfo> r = JsonSerializer.Deserialize<ResponseData<DownloadInfo>>(response);
             // if (!result)
             // {
             //     Console.WriteLine("Response is null");
@@ -419,7 +602,7 @@ public partial class FileDownloader : Form
             // ---
 
             // --- case 2
-            // (bool is__, string message__, List<FilePathData> resultData) = await Utils.CallApi<FilePathData>(url, jsonContent, apiKey);
+            // (bool is__, string message__, List<DownloadInfo> resultData) = await Utils.CallApi<DownloadInfo>(url, jsonContent, apiKey);
 
             // foreach (var item in resultData)
             // {
@@ -444,7 +627,7 @@ public partial class FileDownloader : Form
             // }
 
             // -- case 3
-            (bool isResult, string resuleMessage, List<FilePathData> resultData) = await Utils.CallApi<List<FilePathData>>(urlApiServer, jsonContent, apiKey);
+            (bool isResult, string resuleMessage, List<DownloadInfo> resultData) = await Utils.CallApi<List<DownloadInfo>>(urlApiServer, jsonContent, apiKey);
             if (!isResult)
             {
                 MessageBox.Show("서버에서 다운로드 정보를 가져올 수 없습니다.");
@@ -454,22 +637,91 @@ public partial class FileDownloader : Form
 
             foreach (var item in resultData)
             {
-                string urlDownloadServer = $"{DEFAULT_FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{item.fileName}";
+                string urlDownloadServer = $"{FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{item.fileName}";
                 bool isValidUrl = await DownloadHelper.IsDownloadableAsync(urlDownloadServer, apiKey);
 
-                // string urlDownloadServer__ = $"{DEFAULT_FILE_SERVER_BASE_URL}/patch/{item.fileName}";
+                // string urlDownloadServer__ = $"{FILE_SERVER_BASE_URL}/patch/{item.fileName}";
                 long TotalFileSize = await DownloadHelper.GetFileSizeAsync(urlDownloadServer, apiKey);
 
                 // Console.WriteLine($"{item.version},  {item.fileName}, {item.checksum}, {item.forceUpdate}");
                 Logger.Log($"version: {item.version},  fileName: {item.fileName}, checksum: {item.checksum}, forceUpdate: {item.forceUpdate}, isdownload: {isValidUrl}");
             }
 
-            // Logger.Log($"{response}");
+
+
+            // ----            
+            // var f__ = new List<DownloadInfo>();
+
+            // f__.Add(new DownloadInfo
+            // {
+            //     version = "0.1",
+            //     fileName = "a.txt",
+            //     fileSize = 123,
+            //     checksum = "abc",
+            //     forceUpdate = true
+            // });
+
+            // f__.Add(new DownloadInfo
+            // {
+            //     version = "0.1",
+            //     fileName = "b.txt",
+            //     fileSize = 123,
+            //     checksum = "abc",
+            //     forceUpdate = true
+            // });
+
+            // DownloadHelper.WriteToJsonFile<List<DownloadInfo>>(DEFAULT_DOWNLOAD_FOLDER + "/.myObjects.json", f__);
+
+            var v__ = DownloadHelper.ReadFromJsonFile<List<DownloadInfo>>($"{DEFAULT_DOWNLOAD_FOLDER}/{DOWNLOAD_LIST_LOCAL_SAVE_FILE}");
+
+            // StackTrace st = new StackTrace(new StackFrame(true));
+
+            // Console.WriteLine(" Stack trace for current level: {0}", st.ToString());
+
+            // StackFrame sf = st.GetFrame(0);
+            // Console.WriteLine(" File: {0}", sf.GetFileName());
+            // Console.WriteLine(" Method: {0}", sf.GetMethod().Name);
+            // Console.WriteLine(" Line Number: {0}", sf.GetFileLineNumber());
+            // Console.WriteLine(" Column Number: {0}", sf.GetFileColumnNumber());
+
+            // FunctionC();
+
+            Logger.Log($"===");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error: {ex.Message}");
         }
     }
+
+    static void FunctionC()
+    {
+        Console.WriteLine("FunctionC start...\n");
+
+        // pdb 파일을 참조하는 StackTrace 인스턴스
+        StackTrace st = new StackTrace(true);
+
+        Console.WriteLine("    프레임 수: " + st.FrameCount);
+        Console.WriteLine("현  재 메서드: " + st.GetFrame(0).GetMethod().Name);
+        Console.WriteLine("호출한 메서드: " + st.GetFrame(1).GetMethod().Name);
+        Console.WriteLine("진  입 메서드: " + st.GetFrame(st.FrameCount - 1).GetMethod().Name);
+        Console.WriteLine();
+
+        Console.WriteLine("-- 호출 스택 --");
+        foreach (StackFrame sf in st.GetFrames())
+        {
+            Console.WriteLine(
+                "  파  일: " + sf.GetFileName() +
+                "      행: " + sf.GetFileLineNumber() +
+                "      열: " + sf.GetFileColumnNumber() +
+                "  오프셋: " + sf.GetILOffset() +
+                "  메서드: " + sf.GetMethod().Name);
+        }
+        Console.WriteLine();
+
+        Console.WriteLine("FunctionC end...");
+    }
+
+
 }
 

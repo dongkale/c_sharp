@@ -109,28 +109,6 @@ public static class Utils
         }
     }
 
-    public static async Task<(bool, string)> GetFileContentAsync(string url)
-    {
-        using (HttpClient client = new HttpClient())
-        {
-            try
-            {
-                // 파일 내용을 다운로드
-                using (HttpResponseMessage response = await client.GetAsync(url))
-                {
-                    response.EnsureSuccessStatusCode();
-                    string content = await response.Content.ReadAsStringAsync();
-                    return (true, content);
-                }
-            }
-            catch (Exception ex)
-            {
-                // 오류가 발생하면 예외 메시지를 반환
-                return (false, $"다운로드 오류: {ex.Message}");
-            }
-        }
-    }
-
     public static async Task<(bool, string)> PostAsync(string url, string jsonContent, string apiKey)
     {
         using (HttpClient client = new HttpClient())
@@ -386,6 +364,40 @@ public static class Utils
         {
             // Console.WriteLine($"파일 삭제 중 오류가 발생했습니다: {ex.Message}");
             return (false, ex.Message);
+        }
+    }
+
+    public static Boolean StringToBoolean(String str)
+    {
+        return StringToBoolean(str, false);
+    }
+
+    public static Boolean StringToBoolean(String str, Boolean bDefault)
+    {
+        String[] BooleanStringOff = { "0", "off", "no" };
+
+        if (String.IsNullOrEmpty(str))
+            return bDefault;
+        else if (BooleanStringOff.Contains(str, StringComparer.InvariantCultureIgnoreCase))
+            return false;
+
+        Boolean result;
+        if (!Boolean.TryParse(str, out result))
+            result = true;
+
+        return result;
+    }
+
+    public static string ToJsonString(object obj)
+    {
+        try
+        {
+            return JsonSerializer.Serialize(obj, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            Logger.ErrorLog($"Failed to serialize object to JSON: {ex.Message}");
+            return string.Empty;
         }
     }
 }

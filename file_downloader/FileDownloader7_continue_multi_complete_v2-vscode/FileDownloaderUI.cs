@@ -46,7 +46,7 @@ public class FileDownloaderUI
 
     public void UpdateStatus(string url, string status)
     {
-        Logger.Log($"{url} - {status}");
+        // Logger.Log($"[FileDownloaderUI][{url}] {status}");
 
         // StatusLabel.Text = status;        
     }

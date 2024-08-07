@@ -70,6 +70,8 @@ public class FileDownloaderItem
             }
             TotalBytesReceived += new FileInfo(tempFilePath).Length;
         }
+
+        Logger.Log($"[FileDownloaderItem][{Url}] TotalBytesReceived: {TotalBytesReceived}");
     }
 
     public async void InitializeTotalFileSize(string apiKey)
@@ -78,6 +80,7 @@ public class FileDownloaderItem
         await DownloadHelper.GetFileSizeAsync(Url, apiKey).ContinueWith(task =>
         {
             TotalFileSize = task.Result;
+            Logger.Log($"[FileDownloaderItem][{Url}] TotalFileSize: {TotalFileSize}");
         });
     }
 
