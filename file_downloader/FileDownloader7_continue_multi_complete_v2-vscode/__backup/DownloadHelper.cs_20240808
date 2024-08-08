@@ -12,11 +12,7 @@ public static class DownloadHelper
 {
     public const int DEFAULT_FILE_PART_COUNT = 4;
 
-    private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-    private static bool _isPaused = false;
-    private static object _pauseLock = new object();
-
-    public static async Task<bool> DownloadFileAsync(string apiKey, FileDownloaderItem item, Action<Action> uiUpdater, CancellationTokenSource cancellationToken, int partCount = DEFAULT_FILE_PART_COUNT)
+    public static async Task DownloadFileAsync(string apiKey, FileDownloaderItem item, Action<Action> uiUpdater, int partCount = DEFAULT_FILE_PART_COUNT)
     {
         long totalFileSize = 0;
         long totalBytesReceived = item.TotalBytesReceived;
@@ -74,8 +70,7 @@ public static class DownloadHelper
                 {
                     long start = i * partSize;
                     long end = (i == partCount - 1) ? totalFileSize - 1 : (start + partSize - 1);
-                    // downloadTasks.Add(DownloadPartAsync(apiKey, item, start, end, i, uiUpdater, _cancellationTokenSource.Token));
-                    downloadTasks.Add(DownloadPartAsync(apiKey, item, start, end, i, uiUpdater, cancellationToken.Token));
+                    downloadTasks.Add(DownloadPartAsync(apiKey, item, start, end, i, uiUpdater));
                 }
 
                 await Task.WhenAll(downloadTasks);
@@ -83,8 +78,6 @@ public static class DownloadHelper
                 CombineParts(item.DownloadPath, partCount);
 
                 uiUpdater(() => item.UpdateStatus(UpdateStatus.Complete, "DOWNLOAD COMPLETE"));
-
-                return true;
             }
             catch (Exception ex)
             {
@@ -92,12 +85,11 @@ public static class DownloadHelper
                 uiUpdater(() => item.UpdateStatus(UpdateStatus.Error, "DOWNLOAD FAIL: " + ex.Message));
 
                 DeletePartFiles(item.DownloadPath, partCount);
-                return false;
             }
         }
     }
 
-    private static async Task DownloadPartAsync(string apiKey, FileDownloaderItem item, long start, long end, int partIndex, Action<Action> uiUpdater, CancellationToken cancellationToken)
+    private static async Task DownloadPartAsync(string apiKey, FileDownloaderItem item, long start, long end, int partIndex, Action<Action> uiUpdater)
     {
         string tempFilePath = $"{item.DownloadPath}.part{partIndex}";
         long existingLength = 0;
@@ -121,20 +113,17 @@ public static class DownloadHelper
 
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, item.Url);
             request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(start, end);
-            using (HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken))
+            using (HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
             {
                 response.EnsureSuccessStatusCode();
 
-                using (Stream responseStream = await response.Content.ReadAsStreamAsync(cancellationToken))
+                using (Stream responseStream = await response.Content.ReadAsStreamAsync())
                 using (FileStream fileStream = new FileStream(tempFilePath, FileMode.Append, FileAccess.Write, FileShare.None))
                 {
                     byte[] buffer = new byte[8192];
                     int bytesRead;
-                    while ((bytesRead = await responseStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+                    while ((bytesRead = await responseStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                     {
-                        // Pause logic
-                        await CheckForPauseAsync();
-
                         fileStream.Write(buffer, 0, bytesRead);
                         lock (item)
                         {
@@ -144,44 +133,6 @@ public static class DownloadHelper
                     }
                 }
             }
-        }
-    }
-
-    public static void CancelDownload()
-    {
-        _cancellationTokenSource?.Cancel();
-    }
-
-    // 모두 task 취소: 예외 발생해서 part 까지 다 지운다.(이어받기 안됨)
-    public static void CancelDownloads(CancellationTokenSource[] items)
-    {
-        foreach (var item in items)
-        {
-            item.Cancel();
-        }
-    }
-
-    private static async Task CheckForPauseAsync()
-    {
-        while (_isPaused)
-        {
-            await Task.Delay(100);
-        }
-    }
-
-    public static void PauseDownload()
-    {
-        lock (_pauseLock)
-        {
-            _isPaused = true;
-        }
-    }
-
-    public static void ResumeDownload()
-    {
-        lock (_pauseLock)
-        {
-            _isPaused = false;
         }
     }
 

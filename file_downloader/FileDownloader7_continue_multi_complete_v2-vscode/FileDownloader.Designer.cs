@@ -14,6 +14,12 @@ partial class FileDownloader
 
     private System.Windows.Forms.Button btnTest;
 
+    public const string BTN_DOWNLOAD_START_TEXT = "다운로드 시작";
+    public const string BTN_DOWNLOAD_PAUSE_TEXT = "다운로드 중단";
+
+    public const string BTN_UPDATE_START_TEXT = "업데이트";
+    public const string BTN_UPDATE_CHECK_TEXT = "업데이트 검사";
+
     /// <summary>
     ///  Clean up any resources being used.
     /// </summary>
@@ -51,7 +57,7 @@ partial class FileDownloader
         this.btnUpdate.Name = "btnUpdate";
         this.btnUpdate.Size = new System.Drawing.Size(90, 23);
         this.btnUpdate.TabIndex = 0;
-        this.btnUpdate.Text = "업데이트";
+        this.btnUpdate.Text = BTN_UPDATE_START_TEXT;
         this.btnUpdate.UseVisualStyleBackColor = true;
         this.btnUpdate.Click += new System.EventHandler(this.btnUpdate_Click);
         //////////////////////////////////////////////////////////////////////////////
@@ -62,7 +68,7 @@ partial class FileDownloader
         this.btnDownload.Name = "btnDownload";
         this.btnDownload.Size = new System.Drawing.Size(90, 23);
         this.btnDownload.TabIndex = 1;
-        this.btnDownload.Text = "다운로드 시작";
+        this.btnDownload.Text = BTN_DOWNLOAD_START_TEXT;
         this.btnDownload.UseVisualStyleBackColor = true;
         this.btnDownload.Click += new System.EventHandler(this.btnDownload_Click);
         this.btnDownload.Enabled = false;

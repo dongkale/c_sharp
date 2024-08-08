@@ -84,6 +84,25 @@ public class FileDownloaderItem
         });
     }
 
+    public (Task, CancellationTokenSource) ExecuteTask(string apiKey, Action<Action> uiUpdater)
+    {
+        CancellationTokenSource cts = new();
+
+        var task = Task.Run(() => DownloadHelper.DownloadFileAsync(apiKey, this, uiUpdater, cts)).ContinueWith(task =>
+        {
+            if (!task.Result)
+            {
+                Logger.ErrorLog($"[FileDownloaderItem][{Url}] 다운로드 오류: {task.Exception?.Message}");
+            }
+            else
+            {
+                Logger.Log($"[FileDownloaderItem][{Url}] 다운로드 완료");
+            }
+        });
+
+        return (task, cts);
+    }
+
     public void UpdateProgress(long bytesReceived, long totalBytes)
     {
         // if (totalBytes == 0)
@@ -99,12 +118,12 @@ public class FileDownloaderItem
         ProgressUpdated?.Invoke();
     }
 
-    public void UpdateStatus(string status)
+    public void UpdateStatus(UpdateStatus status, string statusMessage)
     {
         // StatusLabel.Text = status;
-        UI.UpdateStatus(Url, status);
+        UI.UpdateStatus(Url, statusMessage);
 
-        StatusUpdated?.Invoke(this, status);
+        StatusUpdated?.Invoke(this, statusMessage);
     }
 
     public bool IsChecksum(string checksum)

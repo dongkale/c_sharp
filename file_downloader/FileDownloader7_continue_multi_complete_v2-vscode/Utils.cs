@@ -400,4 +400,16 @@ public static class Utils
             return string.Empty;
         }
     }
+
+    public static (int, string) ButtonTextSwitch(string text0, string text1, string text2)
+    {
+        int indexSwitch;
+        string textString;
+
+        textString = (text0 == text1) ? text2 : text1;
+        indexSwitch = (text0 == text1) ? 2 : 1;
+
+        return (indexSwitch, textString);
+
+    }
 }
