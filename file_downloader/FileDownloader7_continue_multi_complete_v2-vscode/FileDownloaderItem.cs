@@ -90,13 +90,13 @@ public class FileDownloaderItem
 
         var task = Task.Run(() => DownloadHelper.DownloadFileAsync(apiKey, this, uiUpdater, cts)).ContinueWith(task =>
         {
-            if (!task.Result)
+            if (task.Result)
             {
-                Logger.ErrorLog($"[FileDownloaderItem][{Url}] 다운로드 오류: {task.Exception?.Message}");
+                Logger.Log($"[FileDownloaderItem][{Url}] 다운로드 완료");
             }
             else
             {
-                Logger.Log($"[FileDownloaderItem][{Url}] 다운로드 완료");
+                Logger.ErrorLog($"[FileDownloaderItem][{Url}] 다운로드 오류: {task.Exception?.Message}");
             }
         });
 
