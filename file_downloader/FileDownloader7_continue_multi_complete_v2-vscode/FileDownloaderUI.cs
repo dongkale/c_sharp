@@ -7,6 +7,8 @@ namespace FileDownloader7;
 
 public class FileDownloaderUI
 {
+    public const int PROGRESS_BAR_PERCENT = 100;
+
     public TextProgressBar ProgressBar { get; private set; } = default!;
     // public Label StatusLabel { get; private set; } = default!;
     // public Label UrlLabel { get; private set; } = default!;
@@ -20,7 +22,7 @@ public class FileDownloaderUI
     private void InitializeComponents(string FileName)
     {
         Panel = new Panel { Width = 400, Height = 20 };
-        ProgressBar = new TextProgressBar { Width = 350, Height = 18, CustomText = FileName, VisualMode = ProgressBarDisplayMode.TextAndPercentage, Location = new Point(0, 0) };
+        ProgressBar = new TextProgressBar { Width = 350, Height = 18, Maximum = PROGRESS_BAR_PERCENT, Value = 0, LastValue = 0, CustomText = FileName, VisualMode = ProgressBarDisplayMode.TextAndPercentage, Location = new Point(0, 0) };
         // StatusLabel = new Label { Width = 300, Location = new Point(0, 35) };
         // UrlLabel = new Label { Text = FileName, Width = 300, Location = new Point(0, 0) };
 
@@ -40,8 +42,17 @@ public class FileDownloaderUI
             return;
         }
 
-        ProgressBar.Maximum = (int)totalBytes;
-        ProgressBar.Value = (int)bytesReceived;
+        // ProgressBar.Maximum = (int)totalBytes;
+        // ProgressBar.Value = (int)bytesReceived;
+
+        int currentPercentage = (int)((double)bytesReceived / totalBytes * PROGRESS_BAR_PERCENT);
+        if (currentPercentage != ProgressBar.LastValue)
+        {
+            // ProgressBar.Value = currentPercentage;
+            // ProgressBar.LastValue = currentPercentage;
+
+            ProgressBar.Invoke(new Action(() => { ProgressBar.Value = currentPercentage; ProgressBar.LastValue = currentPercentage; }));
+        }
     }
 
     public void UpdateStatus(string url, string status)

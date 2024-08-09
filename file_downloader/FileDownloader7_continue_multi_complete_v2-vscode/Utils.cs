@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Win32;
 
 namespace FileDownloader7;
 
@@ -410,6 +411,33 @@ public static class Utils
         indexSwitch = (text0 == text1) ? 2 : 1;
 
         return (indexSwitch, textString);
+    }
 
+    // https://crazykim2.tistory.com/517
+    public static bool SetRegistryKey(string parentsKey, string key, string value)
+    {
+        try
+        {
+            Registry.CurrentUser.CreateSubKey("Software")?.CreateSubKey(parentsKey)?.SetValue(key, value);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.ErrorLog($"[SetRegistryKey] Failed: {ex.Message}");
+            return false;
+        }
+    }
+
+    public static string GetRegistryKey(string parentsKey, string key)
+    {
+        try
+        {
+            return Registry.CurrentUser.CreateSubKey("Software")?.OpenSubKey(parentsKey)?.GetValue(key)?.ToString() ?? String.Empty;
+        }
+        catch (Exception ex)
+        {
+            Logger.ErrorLog($"[GetRegistryKey] Failed: {ex.Message}");
+            return String.Empty;
+        }
     }
 }

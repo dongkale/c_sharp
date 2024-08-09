@@ -24,6 +24,9 @@ public class TextProgressBar : ProgressBar
     public Font TextFont { get; set; } = new Font(FontFamily.GenericMonospace, 8); //, FontStyle.Bold | FontStyle.Italic);
     private SolidBrush _textColourBrush = (SolidBrush)Brushes.Black;
     [Category("Additional Options")]
+
+    private int _lastValue;
+
     public Color TextColor
     {
         get
@@ -36,6 +39,19 @@ public class TextProgressBar : ProgressBar
             _textColourBrush = new SolidBrush(value);
         }
     }
+
+    public int LastValue
+    {
+        get
+        {
+            return _lastValue;
+        }
+        set
+        {
+            _lastValue = value;
+        }
+    }
+
     private SolidBrush _progressColourBrush = (SolidBrush)Brushes.LightGreen;
     [Category("Additional Options"), Browsable(true), EditorBrowsable(EditorBrowsableState.Always)]
     public Color ProgressColor
