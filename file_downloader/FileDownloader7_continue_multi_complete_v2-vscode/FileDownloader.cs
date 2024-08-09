@@ -661,13 +661,9 @@ public partial class FileDownloader : Form
 
     private async void btnTest_Click(object sender, EventArgs e)
     {
-        var sss = Utils.GetRegistryKey("Downloader_v1", "DownloadFolder");
-        Utils.SetRegistryKey("Downloader_v2", "DownloadFolder", "C:\\downloadedFiles");
-
         // var props = typeof(DownloadInfo).GetProperties().Length;
 
         // var v = props.Count();
-
 
         // string downloadUrl = $"{FILE_SERVER_BASE_URL}/{DOWNLOAD_INFO_FILE}"; // 5a1000e8775ccb62e436468adcbfb243
         string downloadUrl = FileDownloader.GetDownloadInfoFile();
