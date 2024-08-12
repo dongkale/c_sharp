@@ -375,7 +375,7 @@ public partial class FileDownloader : Form
         }
 
         this.btnUpdate.Enabled = false;
-        // btnDownload.Enabled = false; // 다운로드 중단/진행을 위해 활성화 한다
+        // btnDownload.Enabled = false; // 다운로드 중단/진행 버튼 표시을 위해 활성화 한다
         this.btnSettings.Enabled = false;
 
         this.IsDownloadStart = true;
@@ -401,7 +401,7 @@ public partial class FileDownloader : Form
         this.btnSettings.Enabled = true;
         this.btnDownload.Enabled = false;
 
-        Logger.Log($"[FileDownloader] All tasks completed.(elapsedTime:{elapsedTimeString})");
+        Logger.Log($"[FileDownloader] All tasks completed.(elapsedTime: {elapsedTimeString})");
 
         PrintMessage($"다운로드가 완료 됐습니다.(소요시간: {elapsedTimeString})");
     }

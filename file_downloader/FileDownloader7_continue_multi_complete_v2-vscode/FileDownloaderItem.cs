@@ -30,7 +30,7 @@ public class FileDownloaderItem
     {
         IsComplete = false;
 
-        Url = url;
+        this.Url = url;
         FileName = Path.GetFileName(url); ;
         DownloadPath = Path.Combine(folderPath, Path.GetFileName(url));
 
@@ -71,16 +71,16 @@ public class FileDownloaderItem
             TotalBytesReceived += new FileInfo(tempFilePath).Length;
         }
 
-        Logger.Log($"[FileDownloaderItem][{Url}] TotalBytesReceived: {TotalBytesReceived}");
+        Logger.Log($"[FileDownloaderItem][{this.Url}] TotalBytesReceived: {TotalBytesReceived}");
     }
 
     public async void InitializeTotalFileSize(string apiKey)
     {
         // TotalFileSize = await DownloadHelper.GetFileSizeAsync(Url, apiKey);
-        await DownloadHelper.GetFileSizeAsync(Url, apiKey).ContinueWith(task =>
+        await DownloadHelper.GetFileSizeAsync(this.Url, apiKey).ContinueWith(task =>
         {
             TotalFileSize = task.Result;
-            Logger.Log($"[FileDownloaderItem][{Url}] TotalFileSize: {TotalFileSize}");
+            Logger.Log($"[FileDownloaderItem][{this.Url}] TotalFileSize: {TotalFileSize}");
         });
     }
 
@@ -93,12 +93,12 @@ public class FileDownloaderItem
             if (task.Result)
             {
                 IsComplete = true;
-                Logger.Log($"[FileDownloaderItem][{Url}] 다운로드 완료:{task.Result}");
+                Logger.Log($"[FileDownloaderItem][{this.Url}] 다운로드 완료:{task.Result}");
             }
             else
             {
                 IsComplete = false;
-                Logger.ErrorLog($"[FileDownloaderItem][{Url}] 다운로드 오류: {task.Exception?.Message}");
+                Logger.ErrorLog($"[FileDownloaderItem][{this.Url}] 다운로드 오류: {task.Exception?.Message}");
             }
         });
 
@@ -115,7 +115,7 @@ public class FileDownloaderItem
 
         // ProgressBar.Maximum = (int)totalBytes;
         // ProgressBar.Value = (int)bytesReceived;
-        UI.UpdateProgress(Url, bytesReceived, totalBytes);
+        UI.UpdateProgress(this.Url, bytesReceived, totalBytes);
 
         ProgressUpdated?.Invoke();
     }
@@ -123,7 +123,7 @@ public class FileDownloaderItem
     public void UpdateStatus(UpdateStatus status, string statusMessage)
     {
         // StatusLabel.Text = status;
-        UI.UpdateStatus(Url, statusMessage);
+        UI.UpdateStatus(this.Url, statusMessage);
 
         StatusUpdated?.Invoke(this, statusMessage);
     }
