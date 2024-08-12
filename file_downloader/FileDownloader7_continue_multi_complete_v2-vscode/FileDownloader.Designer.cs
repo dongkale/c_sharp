@@ -11,6 +11,7 @@ partial class FileDownloader
     private System.Windows.Forms.Button btnDownload;
     private System.Windows.Forms.Button btnSettings;
     private System.Windows.Forms.FlowLayoutPanel panelDownloadList;
+    public Label labelStatus { get; private set; } = default!;
 
     private System.Windows.Forms.Button btnTest;
 
@@ -45,6 +46,8 @@ partial class FileDownloader
         this.btnDownload = new System.Windows.Forms.Button();
         this.btnSettings = new System.Windows.Forms.Button();
         this.panelDownloadList = new System.Windows.Forms.FlowLayoutPanel();
+
+        this.labelStatus = new System.Windows.Forms.Label();
 
         this.btnTest = new System.Windows.Forms.Button();
         this.SuspendLayout();
@@ -97,13 +100,81 @@ partial class FileDownloader
         //////////////////////////////////////////////////////////////////////////////
 
         // 
+        // Status Label
+        // 
+        this.labelStatus.Location = new System.Drawing.Point(15, 37);
+        this.labelStatus.Name = "labelStatus";
+        this.labelStatus.Size = new System.Drawing.Size(430, 20);
+        this.labelStatus.Text = "준비";
+        this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+
+        // 
         // panelDownloadList
         // 
         this.panelDownloadList.AutoScroll = true;
-        this.panelDownloadList.Location = new System.Drawing.Point(12, 70);
+        this.panelDownloadList.Location = new System.Drawing.Point(12, 87);
         this.panelDownloadList.Name = "panelDownloadList";
         this.panelDownloadList.Size = new System.Drawing.Size(430, 180);
         this.panelDownloadList.TabIndex = 3;
+        this.panelDownloadList.BorderStyle = BorderStyle.FixedSingle;
+        // this.panelDownloadList.BackColor = Color.LightGray;
+        // Remove the line that sets the BorderColor property
+
+        // .............................................................................................
+        // var separator = new Label();
+        // separator.BorderStyle = BorderStyle.Fixed3D;
+        // separator.Height = 2;
+
+        // Label labelSeperator = new Label();
+        // labelSeperator.Location = new System.Drawing.Point(15, 50);
+        // labelSeperator.Text = "____________________________________________________________________________";
+        // labelSeperator.Size = new System.Drawing.Size(430, 120);       
+
+        // labelSeperator.Height = 2;
+        // labelSeperator.BorderStyle = BorderStyle.Fixed3D;
+        // labelSeperator.Size = new System.Drawing.Size(430, 78);
+
+        // separator bevel line
+        // Label labelSeperator = new Label();
+        // labelSeperator.AutoSize = false;
+        // labelSeperator.Height = 2;
+        // labelSeperator.Size = new System.Drawing.Size(430, 78);
+        // labelSeperator.BorderStyle = BorderStyle.Fixed3D;
+
+        // 가로선
+        // Label labelSeperator = new Label();
+        // labelSeperator.BorderStyle = BorderStyle.Fixed3D;
+        // labelSeperator.Size = new System.Drawing.Size(430, 2);
+        // labelSeperator.Location = new System.Drawing.Point(15, 50);
+
+
+        // Label labelSeperator = new Label();
+        // labelSeperator.Height = 2;  // Set the height of the line
+        // labelSeperator.Width = this.ClientSize.Width;  // Set the width of the line
+        // labelSeperator.BackColor = Color.LightSlateGray;  // Set the color of the line
+        // labelSeperator.Location = new System.Drawing.Point(15, 50);
+        // labelSeperator.Top = 50;  // Position the line vertically
+        // labelSeperator.Left = 15;  // Position the line horizontally
+
+
+        // GroupBox labelSeperator = new GroupBox();
+        // labelSeperator.Height = 3;  // Set the height of the line
+        // labelSeperator.Width = this.ClientSize.Width;  // Set the width of the line
+        // labelSeperator.BackColor = Color.Black;  // Set the color of the line
+        // labelSeperator.Top = 50;  // Position the line vertically
+        // labelSeperator.Left = 15;  // Position the line horizontally
+        // labelSeperator.Text = "";  // Remove the tex
+
+
+        Label labelSeperator = new Label();
+        labelSeperator.AutoSize = false;
+        labelSeperator.Width = 430;
+        labelSeperator.Height = 2;
+        labelSeperator.BorderStyle = BorderStyle.Fixed3D;
+        labelSeperator.BackColor = Color.LightGray;
+        labelSeperator.Location = new System.Drawing.Point(12, 58);
+        // .............................................................................................
+
         // 
         // FileDownloader
         // 
@@ -111,6 +182,8 @@ partial class FileDownloader
         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
         this.ClientSize = new System.Drawing.Size(455, 280); // Adjusted height to accommodate overall progress bar
         this.Controls.Add(this.btnUpdate);
+        this.Controls.Add(this.labelStatus);
+        this.Controls.Add(labelSeperator);
         this.Controls.Add(this.panelDownloadList);
         this.Controls.Add(this.btnSettings);
         this.Controls.Add(this.btnTest);    // Test

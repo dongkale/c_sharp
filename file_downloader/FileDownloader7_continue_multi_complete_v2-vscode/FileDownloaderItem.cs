@@ -92,10 +92,12 @@ public class FileDownloaderItem
         {
             if (task.Result)
             {
-                Logger.Log($"[FileDownloaderItem][{Url}] 다운로드 완료");
+                IsComplete = true;
+                Logger.Log($"[FileDownloaderItem][{Url}] 다운로드 완료:{task.Result}");
             }
             else
             {
+                IsComplete = false;
                 Logger.ErrorLog($"[FileDownloaderItem][{Url}] 다운로드 오류: {task.Exception?.Message}");
             }
         });

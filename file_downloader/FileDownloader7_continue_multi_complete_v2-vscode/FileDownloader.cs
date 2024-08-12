@@ -44,6 +44,8 @@ public partial class FileDownloader : Form
 
     private bool IsDownloadStart = false;
     // private bool isDownloadComplete = false;
+    private DateTime DownloadStartDate = default!;
+
 
     public class DownloadInfo
     {
@@ -167,9 +169,9 @@ public partial class FileDownloader : Form
 
     public FileDownloader()
     {
-        InitializeComponent();
+        this.InitializeComponent();
 
-        InitializeSetting();
+        this.InitializeSetting();
     }
 
     public void InitializeSetting()
@@ -177,15 +179,15 @@ public partial class FileDownloader : Form
         var downloadFolder = Utils.GetRegistryKey(Process.GetCurrentProcess().ProcessName, DOWNLOAD_FOLDER_REGISTRY_KEY);
         if (String.IsNullOrEmpty(downloadFolder))
         {
-            DownloadFolder = DEFAULT_DOWNLOAD_FOLDER;
-            Utils.SetRegistryKey(Process.GetCurrentProcess().ProcessName, DOWNLOAD_FOLDER_REGISTRY_KEY, DownloadFolder);
+            this.DownloadFolder = DEFAULT_DOWNLOAD_FOLDER;
+            Utils.SetRegistryKey(Process.GetCurrentProcess().ProcessName, DOWNLOAD_FOLDER_REGISTRY_KEY, this.DownloadFolder);
         }
         else
         {
-            DownloadFolder = downloadFolder;
+            this.DownloadFolder = downloadFolder;
         }
 
-        Directory.CreateDirectory(DownloadFolder);
+        Directory.CreateDirectory(this.DownloadFolder);
     }
 
     public static string GetDownloadInfoFile()
@@ -208,45 +210,93 @@ public partial class FileDownloader : Form
         return $"{DownloadFolder}/{DOWNLOAD_LIST_LOCAL_SAVE_FILE}";
     }
 
-    private async void btnUpdate_Click(object sender, EventArgs e)
+    private async void __old_btnUpdate_Click(object sender, EventArgs e)
     {
+        this.PrintMessage("업데이트 정보 얻어오는중 입니다.");
+
         btnUpdate.Text = BTN_UPDATE_CHECK_TEXT;
         btnUpdate.Enabled = false;
 
-        (bool isResult, string message) = await SetupDownload();
+        (bool isResult, string message) = await this.SetupDownload();
 
         btnUpdate.Text = BTN_UPDATE_START_TEXT;
         btnUpdate.Enabled = true;
 
+        this.PrintMessage("다운로드를 시작할 수 있습니다.");
+
         if (!isResult)
         {
-            MessageBox.Show(message);
+            // MessageBox.Show(message);
+            PrintMessage(message);
             return;
         }
 
-        if (OverallProgressBar == null)
+        if (this.OverallProgressBar == null)
         {
-            OverallProgressBar = new TextProgressBar
+            this.OverallProgressBar = new TextProgressBar
             {
-                Width = 480,
-                Height = 20,
+                Width = 500,
+                Height = 18,
                 VisualMode = ProgressBarDisplayMode.Percentage,
-                Location = new Point(15, 45),
+                // Location = new Point(15, 45),
+                Location = new Point(15, 75),
                 // Maximum = 100,
                 // Value = 0
                 // LastValue = 0
             };
         }
 
-        OverallProgressBar.Maximum = 100;
-        OverallProgressBar.Value = 0;
-        OverallProgressBar.LastValue = 0;
+        this.OverallProgressBar.Maximum = 100;
+        this.OverallProgressBar.Value = 0;
+        this.OverallProgressBar.LastValue = 0;
+
+        this.Controls.Add(this.OverallProgressBar);
+
+        this.btnDownload.Enabled = true;
+        this.btnDownload.Text = BTN_DOWNLOAD_START_TEXT;
+        this.btnDownload.Focus();
+    }
+
+    private async void btnUpdate_Click(object sender, EventArgs e)
+    {
+        this.PrintMessage("업데이트 정보 얻어오는중 입니다.");
+
+        this.btnUpdate.Text = BTN_UPDATE_CHECK_TEXT;
+        this.btnUpdate.Enabled = false;
+
+        this.Controls.Remove(OverallProgressBar);
+
+        (bool isResult, string message) = await this.SetupDownload();
+
+        this.btnUpdate.Text = BTN_UPDATE_START_TEXT;
+        this.btnUpdate.Enabled = true;
+
+        if (!isResult)
+        {
+            // MessageBox.Show(message);
+            this.PrintMessage(message);
+            return;
+        }
+
+        this.OverallProgressBar = new TextProgressBar
+        {
+            Name = "OverallProgressBar",
+            Width = 500,
+            Height = 18,
+            VisualMode = ProgressBarDisplayMode.Percentage,
+            Location = new Point(15, 75),
+            Maximum = 100,
+            Value = 0,
+            LastValue = 0
+        };
 
         this.Controls.Add(OverallProgressBar);
 
-        btnDownload.Enabled = true;
-        btnDownload.Text = BTN_DOWNLOAD_START_TEXT;
-        btnDownload.Focus();
+        this.btnDownload.Enabled = true;
+        this.btnDownload.Text = BTN_DOWNLOAD_START_TEXT;
+        this.btnDownload.Focus();
+
+        this.PrintMessage("다운로드를 시작할 수 있습니다.");
     }
 
     private void btnSettings_Click(object sender, EventArgs e)
@@ -255,9 +305,9 @@ public partial class FileDownloader : Form
         {
             if (folderDialog.ShowDialog() == DialogResult.OK)
             {
-                DownloadFolder = folderDialog.SelectedPath;
+                this.DownloadFolder = folderDialog.SelectedPath;
 
-                Utils.SetRegistryKey(Process.GetCurrentProcess().ProcessName, DOWNLOAD_FOLDER_REGISTRY_KEY, DownloadFolder);
+                Utils.SetRegistryKey(Process.GetCurrentProcess().ProcessName, DOWNLOAD_FOLDER_REGISTRY_KEY, this.DownloadFolder);
             }
         }
     }
@@ -292,7 +342,7 @@ public partial class FileDownloader : Form
 
         (int indexSwitch, btnDownload.Text) = Utils.ButtonTextSwitch(btnDownload.Text, BTN_DOWNLOAD_START_TEXT, BTN_DOWNLOAD_PAUSE_TEXT);
 
-        if (IsDownloadStart)
+        if (this.IsDownloadStart)
         {
             if (indexSwitch == 1)
             {
@@ -305,7 +355,7 @@ public partial class FileDownloader : Form
         }
         else
         {
-            DownloadProc();
+            this.DownloadProc();
         }
     }
 
@@ -318,85 +368,47 @@ public partial class FileDownloader : Form
     {
         string apiKey = DEFAULT_API_KEY;
 
-        if (DownloadItems.Count == 0 || string.IsNullOrEmpty(DownloadFolder))
+        if (this.DownloadItems.Count == 0 || string.IsNullOrEmpty(this.DownloadFolder))
         {
             MessageBox.Show("다운로드 폴더를 지정해주세요.");
             return;
         }
 
-        btnUpdate.Enabled = false;
-        // btnDownload.Enabled = false;
-        btnSettings.Enabled = false;
+        this.btnUpdate.Enabled = false;
+        // btnDownload.Enabled = false; // 다운로드 중단/진행을 위해 활성화 한다
+        this.btnSettings.Enabled = false;
 
-        TaskList = DownloadItems.Select(item => item.ExecuteTask(apiKey, UpdateUI)).ToList();
+        this.IsDownloadStart = true;
+        this.DownloadStartDate = DateTime.Now;
+
+        this.TaskList = this.DownloadItems.Select(item => item.ExecuteTask(apiKey, UpdateUI)).ToList();
         // foreach (var item in DownloadItems)
         // {
         //     // var (task, cts) = StartDownload(item);
         //     var (task, cts) = item.ExecuteTask(apiKey, UpdateUI);
 
-        //     TaskList.Add((task, cts));
-        // }
+        //     this.TaskList.Add((task, cts));
+        // }        
 
-        IsDownloadStart = true;
-        // isDownloadComplete = false;
+        await Task.WhenAll(this.TaskList.Select(t => t.Item1).ToArray());
 
-        await Task.WhenAll(TaskList.Select(t => t.Item1).ToArray());
+        // TimeSpan timeDiff = DateTime.Now - this.DownloadStartDate;        
+        var elapsedTimeString = Utils.FormatTimeSpan(DateTime.Now - this.DownloadStartDate);
 
-        IsDownloadStart = false;
+        this.IsDownloadStart = false;
 
-        btnUpdate.Enabled = true;
-        btnSettings.Enabled = true;
-        btnDownload.Enabled = false;
+        this.btnUpdate.Enabled = true;
+        this.btnSettings.Enabled = true;
+        this.btnDownload.Enabled = false;
 
-        Console.WriteLine("All tasks completed.");
-        Logger.Log($"[FileDownloader] All tasks completed.");
+        Logger.Log($"[FileDownloader] All tasks completed.(elapsedTime:{elapsedTimeString})");
 
-        MessageBox.Show("다운로드가 완료 됐습니다.");
+        PrintMessage($"다운로드가 완료 됐습니다.(소요시간: {elapsedTimeString})");
     }
-
-    // private void InitDownload()
-    // {
-    //     // overallProgressBar.Maximum = 100;
-    //     // overallProgressBar.Value = 0;
-
-    //     btnUpdate.Enabled = false;
-    //     // btnDownload.Enabled = false;
-    //     btnSettings.Enabled = false;
-
-    //     taskList = DownloadItems.Select(item => item.ExecuteTask(DEFAULT_API_KEY, UpdateUI)).ToList();
-    //     // foreach (var item in DownloadItems)
-    //     // {
-    //     //     var (task, cts) = StartDownload(item);
-
-    //     //     taskList.Add((task, cts));
-    //     // }
-
-    //     isDownloadStart = true;
-    // }
-
-    // private void EndDownload()
-    // {
-    //     isDownloadStart = false;
-
-    //     btnUpdate.Enabled = true;
-    //     btnSettings.Enabled = true;
-    //     btnDownload.Enabled = false;
-    // }
 
     private async Task<(bool, string)> SetupDownload()
     {
         string apiKey = DEFAULT_API_KEY;
-
-        // var files = new List<DownloadInfo>
-        // {
-        //     new DownloadInfo { version = "0.1", fileName = "text01.txt", fileSize = 4, checksum = "cb08ca4a7bb5f9683c19133a84872ca7", forceUpdate = true },
-        //     new DownloadInfo { version = "0.1", fileName = "text02.txt", fileSize = 48, checksum = "f38c26a09c89158123f77b474221cc8a", forceUpdate = true },
-        //     new DownloadInfo { version = "0.1", fileName = "text03.txt", fileSize = 334564, checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", forceUpdate = true },
-        //     // new DownloadInfo { version = "0.1", fileName = "text04.txt", fileSize = 334564, checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", forceUpdate = true },
-        //     new DownloadInfo { version = "0.1", fileName = "image_11.bin", fileSize = 675888392, checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", forceUpdate = true },
-        //     new DownloadInfo { version = "0.1", fileName = "image_09.bin", fileSize = 80876324, checksum = "30eb7e71f05abc3a12ce3fcd589debd6", forceUpdate = true },
-        //     // new DownloadInfo { version = "0.1", fileName = "image_12.bin", fileSize = 675888392, checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", forceUpdate = true },
-        // };
 
         // 기존 저장 되어 있는 다운로드 정보 읽어오기, 없으면 그냥 skip...
         var saveDownloadInfo = DownloadHelper.ReadFromJsonFile<List<DownloadInfo>>(GetDownloadListSaveFile());
@@ -408,32 +420,38 @@ public partial class FileDownloader : Form
 
         // ---------
         // 테스트용으로 로컬에서 정보를 가져온다
-        (bool isResult1, string message1, List<DownloadInfo> files) = __GetDownloadInfoFromLocalFile(apiKey);
+        (bool isResult1, string message1, List<DownloadInfo> files) = this.__GetDownloadInfoFromLocalFile(apiKey);
         if (!isResult1)
         {
             return (false, message1);
         }
 
-        (bool isResult2, string message2, List<DownloadInfo> files__2) = await GetDownloadInfoFromPatchServer(apiKey);
+        Logger.Log($"[SetupDownload] LoaddDownloadInfo(Local): {Utils.ToJsonString(files)}");
+
+        (bool isResult2, string message2, List<DownloadInfo> files__2) = await this.GetDownloadInfoFromPatchServer(apiKey);
         if (!isResult2)
         {
             return (false, message2);
         }
 
-        (bool isResult3, string message3, List<DownloadInfo> files__3) = await GetDownloadInfoFromPatchFile(apiKey);
+        Logger.Log($"[SetupDownload] LoaddDownloadInfo(Server): {Utils.ToJsonString(files__2)}");
+
+        (bool isResult3, string message3, List<DownloadInfo> files__3) = await this.GetDownloadInfoFromPatchFile(apiKey);
         if (!isResult3)
         {
             return (false, message3);
         }
+
+        Logger.Log($"[SetupDownload] LoaddDownloadInfo(File): {Utils.ToJsonString(files__3)}");
         // ---------
 
         // 다운로드 정보를 저장, 다운로드가 완료되면 저장 ??????
-        DownloadHelper.WriteToJsonFile<List<DownloadInfo>>(GetDownloadListSaveFile(), files);
+        DownloadHelper.WriteToJsonFile<List<DownloadInfo>>(this.GetDownloadListSaveFile(), files);
 
-        if (!Directory.Exists(DownloadFolder))
+        if (!Directory.Exists(this.DownloadFolder))
         {
-            Logger.ErrorLog($"[SetupDownload] 다운로드 폴더가 존재하지 않습니다. {DownloadFolder}");
-            return (false, $"다운로드 폴더가 존재하지 않습니다. {DownloadFolder}");
+            Logger.ErrorLog($"[SetupDownload] 다운로드 폴더가 존재하지 않습니다. {this.DownloadFolder}");
+            return (false, $"다운로드 폴더가 존재하지 않습니다. {this.DownloadFolder}");
         }
 
         var isValidUrl = false;
@@ -457,40 +475,53 @@ public partial class FileDownloader : Form
             return (false, $"유효하지 않은 URL이 포함되어 있습니다.");
         }
 
-        DownloadItems.Clear();
-        panelDownloadList.Controls.Clear();
+        this.DownloadItems.Clear();
+        this.panelDownloadList.Controls.Clear();
 
         foreach (var file in files)
         {
-            // string url = $"{FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{file.fileName}";
             string url = FileDownloader.GetDownloadFilePath(file.FileName);
-            if (DownloadItems.Any(x => x.Url == url))
+            if (this.DownloadItems.Any(x => x.Url == url))
             {
                 Logger.ErrorLog($"{url} - 이미 추가된 URL입니다.");
                 continue;
             }
 
-            var downloadFilePath = Path.Combine(DownloadFolder, Path.GetFileName(url));
+            // var downloadFilePath = Path.Combine(DownloadFolder, Path.GetFileName(url));
+            var downloadFilePath = Path.Combine(this.DownloadFolder, file.FileName);
 
             if (!file.ForceUpdate)  // 무조건 업데이트가 아니라면
             {
-                var isChecksum = IsChecksum(downloadFilePath, file.Checksum);
-                Logger.Log($"[SetupDownload] {url} - {downloadFilePath} -> Checksum: {isChecksum}[{file.Checksum}]");
-
-                if (!isChecksum) // 체크섬이 맞지 않으면 새로 다운로드 받기 위해 삭제한다
-                {
-                    Utils.DeleteFile(downloadFilePath);
-                }
-
-                // 현재 존재하는 화일
+                // 화일이 없을 경우... 무조건 다운로드 한다
+                // 화일이 있을 경우... 체크섬이 맞지 않으면 다운로드 받는다
                 if (File.Exists(downloadFilePath))
                 {
-                    Logger.Log($"[SetupDownload] {url} - {downloadFilePath} -> Exist");
-                    continue;
+                    var isChecksum = IsChecksum(downloadFilePath, file.Checksum);
+                    Logger.Log($"[SetupDownload] {url} - {downloadFilePath} -> Checksum: {isChecksum}[{file.Checksum}]");
+
+                    if (isChecksum)
+                    {
+                        Logger.Log($"[SetupDownload] {url} - {downloadFilePath} -> Exist");
+                        continue;
+                    }
+                    else  // 체크섬이 맞지 않으면 새로 다운로드 받기 위해 삭제한다
+                    {
+                        Utils.DeleteFile(downloadFilePath);
+
+                        // DownloadHelper.DeleteAllPartFiles__(DownloadFolder, file.FileName);   // *part* 삭제
+                        DownloadHelper.DeleteAllPartFiles(downloadFilePath);   // *part* 삭제
+                    }
+
+                    // // 현재 존재하는 화일은 skip
+                    // if (File.Exists(downloadFilePath))
+                    // {
+                    //     Logger.Log($"[SetupDownload] {url} - {downloadFilePath} -> Exist");
+                    //     continue;
+                    // }
                 }
             }
 
-            FileDownloaderItem item = new FileDownloaderItem(url, DownloadFolder);
+            FileDownloaderItem item = new FileDownloaderItem(url, this.DownloadFolder);
 
             item.InitializeTotalBytesReceived();
             item.InitializeTotalFileSize(apiKey);
@@ -506,18 +537,23 @@ public partial class FileDownloader : Form
             item.ProgressUpdated += UpdateOverallProgress;
             item.StatusUpdated += (sender, status) => Logger.Log($"[StatusUpdated][{url}] {status}");
 
-            DownloadItems.Add(item);
-            panelDownloadList.Controls.Add(item.UI.Panel);
+            this.DownloadItems.Add(item);
+            this.panelDownloadList.Controls.Add(item.UI.Panel);
 
             Logger.Log($"[SetupDownload][{url}] 다운로드 추가");
         }
 
-        if (DownloadItems.Count <= 0)
+        if (this.DownloadItems.Count <= 0)
         {
-            return (false, $"모두 업데이트 완료 됐습니다.");
+            return (false, "모두 업데이트 완료 됐습니다.");
         }
 
         return (true, "Success");
+    }
+
+    private void PrintMessage(string message)
+    {
+        this.labelStatus.Text = message;
     }
 
     private async Task<(bool, string, List<DownloadInfo>)> GetDownloadInfoFromPatchServer(string apiKey)
@@ -560,16 +596,20 @@ public partial class FileDownloader : Form
     {
         var downloadInfo = new List<DownloadInfo>
         {
-            new DownloadInfo { Version = "0.1", FileName = "text01.txt", FileSize = 4, Checksum = "cb08ca4a7bb5f9683c19133a84872ca7", ForceUpdate = true },
-            new DownloadInfo { Version = "0.1", FileName = "text02.txt", FileSize = 48, Checksum = "f38c26a09c89158123f77b474221cc8a", ForceUpdate = true },
-            new DownloadInfo { Version = "0.1", FileName = "text03.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
-            new DownloadInfo { Version = "0.1", FileName = "text04.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
-            new DownloadInfo { Version = "0.1", FileName = "image_09.bin", FileSize = 80876324,  Checksum = "30eb7e71f05abc3a12ce3fcd589debd6", ForceUpdate = true },
-            new DownloadInfo { Version = "0.1", FileName = "image_11.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = true },
-            new DownloadInfo { Version = "0.1", FileName = "image_12.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = true },
-            new DownloadInfo { Version = "0.1", FileName = "image_13.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = true },
-            new DownloadInfo { Version = "0.1", FileName = "image_14.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = true },
-            new DownloadInfo { Version = "0.1", FileName = "image_15.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = true },
+            new() { Version = "0.1", FileName = "text01.txt", FileSize = 4, Checksum = "cb08ca4a7bb5f9683c19133a84872ca7", ForceUpdate = true },
+            new() { Version = "0.1", FileName = "text02.txt", FileSize = 48, Checksum = "f38c26a09c89158123f77b474221cc8a", ForceUpdate = true },
+            new() { Version = "0.1", FileName = "text03.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
+            new() { Version = "0.1", FileName = "text04.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
+            new() { Version = "0.1", FileName = "text05.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
+            new() { Version = "0.1", FileName = "text06.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
+            new() { Version = "0.1", FileName = "text07.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
+            new() { Version = "0.1", FileName = "text08.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
+            new() { Version = "0.1", FileName = "image_09.bin", FileSize = 80876324,  Checksum = "30eb7e71f05abc3a12ce3fcd589debd6", ForceUpdate = true },
+            new() { Version = "0.1", FileName = "image_11.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = true },
+            // new()  { Version = "0.1", FileName = "image_12.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = false },
+            // new() { Version = "0.1", FileName = "image_13.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = false },
+            // new() { Version = "0.1", FileName = "image_14.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = false },
+            // new() { Version = "0.1", FileName = "image_15.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = false },
         };
 
         return (true, "Success", downloadInfo);
@@ -603,34 +643,26 @@ public partial class FileDownloader : Form
         return Utils.CalculateMD5FromFile(downloadFilePath) == checksum;
     }
 
-    // private (Task, CancellationTokenSource) StartDownload(FileDownloaderItem item)
-    // {
-    //     string apiKey = DEFAULT_API_KEY;
-    //     CancellationTokenSource cts = new();
-
-    //     var task = Task.Run(() => DownloadHelper.DownloadFileAsync(apiKey, item, UpdateUI, cts));
-    //     return (task, cts);
-    // }
-
     private void UpdateOverallProgress()
     {
         // long totalBytesReceived = DownloadItems.Where(item => item.TotalBytesReceived < item.TotalFileSize).Sum(item => item.TotalBytesReceived);
         // long totalFileSize = DownloadItems.Where(item => item.TotalBytesReceived < item.TotalFileSize).Sum(item => item.TotalFileSize);
 
-        long totalBytesReceived = DownloadItems.Sum(item => item.TotalBytesReceived);
-        long totalFileSize = DownloadItems.Sum(item => item.TotalFileSize);
+        long totalBytesReceived = this.DownloadItems.Sum(item => item.TotalBytesReceived);
+        long totalFileSize = this.DownloadItems.Sum(item => item.TotalFileSize);
 
         int percentage = totalFileSize > 0 ? (int)((double)totalBytesReceived / totalFileSize * 100) : 0;
 
         // overallProgressBar.Maximum = 100;
         // overallProgressBar.Value = percentage;
 
-        if (percentage != OverallProgressBar.LastValue)
+        if (percentage != this.OverallProgressBar.Value)
         {
             // OverallProgressBar.Value = percentage;
             // OverallProgressBar.LastValue = percentage;
 
-            OverallProgressBar.Invoke(new Action(() => { OverallProgressBar.Value = percentage; OverallProgressBar.LastValue = percentage; }));
+            // OverallProgressBar.Invoke(new Action(() => { OverallProgressBar.Value = percentage; OverallProgressBar.LastValue = percentage; }));
+            this.OverallProgressBar.Invoke(new Action(() => this.OverallProgressBar.Value = percentage));
         }
 
         // if (OverallProgressBar.InvokeRequired)
@@ -662,7 +694,6 @@ public partial class FileDownloader : Form
     private async void btnTest_Click(object sender, EventArgs e)
     {
         // var props = typeof(DownloadInfo).GetProperties().Length;
-
         // var v = props.Count();
 
         // string downloadUrl = $"{FILE_SERVER_BASE_URL}/{DOWNLOAD_INFO_FILE}"; // 5a1000e8775ccb62e436468adcbfb243
@@ -714,13 +745,13 @@ public partial class FileDownloader : Form
             // string jsonContent = JsonSerializer.Serialize(jsonDict);
 
             // case 4
-            string jsonContent = JsonSerializer.Serialize(
-                new
-                {
-                    key1 = "items1",
-                    key2 = "items2"
-                }
-            );
+            // string jsonContent = JsonSerializer.Serialize(
+            //     new
+            //     {
+            //         key1 = "items1",
+            //         key2 = "items2"
+            //     }
+            // );
 
             // --- case 1
             // (bool result, string response) = await Utils.PostAsync(url, jsonContent, apiKey);

@@ -219,6 +219,41 @@ public static class DownloadHelper
         }
     }
 
+    // public static void DeleteAllPartFiles__(string filePath, string fileName)
+    // {
+    //     // Directory.GetFiles(filepath, $"{filename}.part.*", SearchOption.TopDirectoryOnly).ToList().ForEach(File.Delete);
+    //     foreach (string tempFilePath in Directory.EnumerateFiles(filePath, $"{fileName}.part*"))
+    //     {
+    //         if (File.Exists(tempFilePath))
+    //         {
+    //             File.Delete(tempFilePath);
+    //             Logger.Log($"[DeleteAllPartFiles][Delete] {Path.GetFileName(tempFilePath)}");
+    //         }
+    //     }
+    // }
+
+    public static void DeleteAllPartFiles(string downloadPath)
+    {
+        string filepath = Path.GetDirectoryName(downloadPath) ?? String.Empty;
+        if (String.IsNullOrEmpty(filepath))
+        {
+            return;
+        }
+
+        string filename = Path.GetFileName(downloadPath);
+
+        foreach (string tempFilePath in Directory.EnumerateFiles(filepath, $"{filename}.part*"))
+        {
+            if (File.Exists(tempFilePath))
+            {
+                File.Delete(tempFilePath);
+                Logger.Log($"[DeleteAllPartFiles][Delete] {Path.GetFileName(tempFilePath)}");
+            }
+        }
+    }
+
+    // Directory.GetFiles("f:\\TestData", "*.zip", SearchOption.TopDirectoryOnly).ToList().ForEach(File.Delete);
+
     public static async Task<bool> IsDownloadableAsync(string url, string apiKey)
     {
         using (HttpClient client = new HttpClient())

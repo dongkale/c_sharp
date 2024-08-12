@@ -393,4 +393,33 @@ public static class Utils
             return String.Empty;
         }
     }
+
+    public static string FormatTimeSpan(TimeSpan timeDiff)
+    {
+        // int diffDays = timeDiff.Days;
+        // int diffHoures = timeDiff.Hours;
+        // int diffMiniute = timeDiff.Minutes;
+        // int diffSecond = timeDiff.Seconds;
+
+        // double diffTotalHours = timeDiff.TotalHours;
+        // double diffTotalMiniute = timeDiff.TotalMinutes;
+
+        // var v__ = timeDiff.ToString("hh\\:mm\\:ss");
+
+        StringBuilder formattedTime = new();
+
+        if (timeDiff.Hours > 0)
+        {
+            formattedTime.Append($"{timeDiff.Hours}시간 ");
+        }
+
+        if (timeDiff.Minutes > 0 || timeDiff.Hours > 0) // Include minutes if there are any hours or minutes
+        {
+            formattedTime.Append($"{timeDiff.Minutes}분 ");
+        }
+
+        formattedTime.Append($"{timeDiff.Seconds}초");
+
+        return formattedTime.ToString().Trim(); // Remove any trailing spaces
+    }
 }
