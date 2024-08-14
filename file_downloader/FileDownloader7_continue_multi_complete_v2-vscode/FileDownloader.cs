@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Text.Json;
 using Accessibility;
+using Amazon;
+using Amazon.S3;
 using Microsoft.Win32;
 
 #pragma warning disable CS8600
@@ -34,6 +36,13 @@ public partial class FileDownloader : Form
 
     // public const string PATCH_FILE_DOWNLOAD_PATH = "patch/download__";
     public const string PATCH_FILE_DOWNLOAD_PATH = "patch";
+
+    // aws 
+    public const string AWS_S3_ACCESS_KEY_ID = "__";
+    public const string AWS_S3_SECRET_ACCESS_KEY = "__";
+    public const string AWS_S3_BUCKET_NAME = "__";
+    AmazonS3Client s3Client = new AmazonS3Client(AWS_S3_ACCESS_KEY_ID, AWS_S3_SECRET_ACCESS_KEY, RegionEndpoint.APNortheast2);
+    // aws 
 
     private List<FileDownloaderItem> DownloadItems = new List<FileDownloaderItem>();
     private string DownloadFolder = DEFAULT_DOWNLOAD_FOLDER;
@@ -85,11 +94,11 @@ public partial class FileDownloader : Form
         //     return files;
         // }
 
-        // var saveDownloadInfo = DownloadHelper.ReadFromJsonFile<List<DownloadInfo>>(GetDownloadListSaveFile());
+        // var saveDownloadInfo = Utils.ReadFromJsonFile<List<DownloadInfo>>(GetDownloadListSaveFile());
 
         // public static (bool, string, List<DownloadInfo>) LoadDownloadInfo(GetDownloadListSaveFile())
         // {
-        //     return DownloadHelper.ReadFromJsonFile<List<DownloadInfo>>();
+        //     return Utils.ReadFromJsonFile<List<DownloadInfo>>();
         // }
 
         public static (bool, string, List<DownloadInfo>) ParseDownloadInfoFileContent(string fileContent)
@@ -381,7 +390,9 @@ public partial class FileDownloader : Form
         this.IsDownloadStart = true;
         this.DownloadStartDate = DateTime.Now;
 
-        this.TaskList = this.DownloadItems.Select(item => item.ExecuteTask(apiKey, UpdateUI)).ToList();
+        // this.TaskList = this.DownloadItems.Select(item => item.ExecuteTask(apiKey, UpdateUI)).ToList();
+        // this.TaskList = this.DownloadItems.Select(item => item.ExecuteTask(s3Client, AWS_S3_BUCKET_NAME, UpdateUI)).ToList();
+        this.TaskList = this.DownloadItems.Select(item => item.ExecuteTask(UpdateUI)).ToList();
         // foreach (var item in DownloadItems)
         // {
         //     // var (task, cts) = StartDownload(item);
@@ -392,7 +403,8 @@ public partial class FileDownloader : Form
 
         await Task.WhenAll(this.TaskList.Select(t => t.Item1).ToArray());
 
-        // TimeSpan timeDiff = DateTime.Now - this.DownloadStartDate;        
+        var countComplete = this.DownloadItems.Sum(item => item.IsComplete ? 1 : 0);
+
         var elapsedTimeString = Utils.FormatTimeSpan(DateTime.Now - this.DownloadStartDate);
 
         this.IsDownloadStart = false;
@@ -401,7 +413,7 @@ public partial class FileDownloader : Form
         this.btnSettings.Enabled = true;
         this.btnDownload.Enabled = false;
 
-        Logger.Log($"[FileDownloader] All tasks completed.(elapsedTime: {elapsedTimeString})");
+        Logger.Log($"[FileDownloader] All tasks completed.(elapsedTime: {elapsedTimeString}), complete:({countComplete})");
 
         PrintMessage($"다운로드가 완료 됐습니다.(소요시간: {elapsedTimeString})");
     }
@@ -411,7 +423,7 @@ public partial class FileDownloader : Form
         string apiKey = DEFAULT_API_KEY;
 
         // 기존 저장 되어 있는 다운로드 정보 읽어오기, 없으면 그냥 skip...
-        var saveDownloadInfo = DownloadHelper.ReadFromJsonFile<List<DownloadInfo>>(GetDownloadListSaveFile());
+        var saveDownloadInfo = Utils.ReadFromJsonFile<List<DownloadInfo>>(GetDownloadListSaveFile());
         if (saveDownloadInfo.Count > 0)
         {
             Console.WriteLine(Utils.ToJsonString(saveDownloadInfo));
@@ -425,6 +437,7 @@ public partial class FileDownloader : Form
         {
             return (false, message1);
         }
+        // ---------
 
         Logger.Log($"[SetupDownload] LoaddDownloadInfo(Local): {Utils.ToJsonString(files)}");
 
@@ -446,7 +459,7 @@ public partial class FileDownloader : Form
         // ---------
 
         // 다운로드 정보를 저장, 다운로드가 완료되면 저장 ??????
-        DownloadHelper.WriteToJsonFile<List<DownloadInfo>>(this.GetDownloadListSaveFile(), files);
+        Utils.WriteToJsonFile<List<DownloadInfo>>(this.GetDownloadListSaveFile(), files);
 
         if (!Directory.Exists(this.DownloadFolder))
         {
@@ -458,10 +471,10 @@ public partial class FileDownloader : Form
         var inValidUrl = "";
         foreach (var file in files)
         {
-            // string url = $"{FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{file.fileName}";
             string url = FileDownloader.GetDownloadFilePath(file.FileName);
 
-            isValidUrl = await DownloadHelper.IsDownloadableAsync(url, apiKey);
+            // isValidUrl = await DownloadHelper.IsDownloadableAsync_S3(s3Client, AWS_S3_BUCKET_NAME, Utils.ExtractFilePathFromUrl(url));
+            isValidUrl = await DownloadHelper.IsDownloadableAsync(apiKey, url);
             if (!isValidUrl)
             {
                 inValidUrl = url;
@@ -521,18 +534,21 @@ public partial class FileDownloader : Form
                 }
             }
 
-            FileDownloaderItem item = new FileDownloaderItem(url, this.DownloadFolder);
+            // FileDownloaderItem item = new FileDownloaderItem(url, this.DownloadFolder, ServerType.AwsS3);
+            FileDownloaderItem item = new FileDownloaderItem(url, this.DownloadFolder, ServerType.FileServer);
+
+            // item.SetS3(s3Client, AWS_S3_BUCKET_NAME);
+            item.SetFileServer(apiKey);
 
             item.InitializeTotalBytesReceived();
-            item.InitializeTotalFileSize(apiKey);
+            if (!item.InitializeTotalFileSize())
+            {
+                Logger.ErrorLog($"[SetupDownload][{url}] invlaid file size");
+                continue;
+            }
 
-            // 화일 크기 얻어서 셋팅 하는 부분이 필요
-            // 화일 받다가 중지 된 경우 이어 받기 하기 위해 InitializeTotalBytesReceived()(TotalBytesReceived 셋팅) 실행이 되고
-            //   TotalFileSize 는 셋팅이 안되서 UpdateOverallProgress() 에러가남 계산이 안맞음
-            // _ = DownloadHelper.GetFileSizeAsync(url, apiKey).ContinueWith(task =>
-            // {
-            //     item.TotalFileSize = task.Result;
-            // });
+            // item.InitializeTotalFileSize(apiKey);
+            // item.InitializeTotalFileSize(s3Client, AWS_S3_BUCKET_NAME);
 
             item.ProgressUpdated += UpdateOverallProgress;
             item.StatusUpdated += (sender, status) => Logger.Log($"[StatusUpdated][{url}] {status}");
@@ -582,7 +598,7 @@ public partial class FileDownloader : Form
     {
         string downloadUrl = FileDownloader.GetDownloadInfoFile();
 
-        (bool isResult, string content) = await DownloadHelper.GetFileContentAsync(downloadUrl, apiKey);
+        (bool isResult, string content) = await DownloadHelper.GetFileContentAsync(apiKey, downloadUrl);
         if (!isResult || String.IsNullOrEmpty(content))
         {
             Logger.ErrorLog($"[GetDownloadInfoFromPatchFile] {content}");
@@ -603,9 +619,9 @@ public partial class FileDownloader : Form
             new() { Version = "0.1", FileName = "text05.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
             new() { Version = "0.1", FileName = "text06.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
             new() { Version = "0.1", FileName = "text07.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
-            new() { Version = "0.1", FileName = "text08.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
-            new() { Version = "0.1", FileName = "image_09.bin", FileSize = 80876324,  Checksum = "30eb7e71f05abc3a12ce3fcd589debd6", ForceUpdate = true },
-            new() { Version = "0.1", FileName = "image_11.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = true },
+            // new() { Version = "0.1", FileName = "text08.txt", FileSize = 334564, Checksum = "cdd50a3cc4c11350b4f7a97b9c83b569", ForceUpdate = true },
+            // new() { Version = "0.1", FileName = "image_09.bin", FileSize = 80876324,  Checksum = "30eb7e71f05abc3a12ce3fcd589debd6", ForceUpdate = true },
+            // new() { Version = "0.1", FileName = "image_11.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = true },
             // new()  { Version = "0.1", FileName = "image_12.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = false },
             // new() { Version = "0.1", FileName = "image_13.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = false },
             // new() { Version = "0.1", FileName = "image_14.bin", FileSize = 675888392, Checksum = "a34ee55dbb3aa4ac993eb7454b1f4d15", ForceUpdate = false },
@@ -703,7 +719,7 @@ public partial class FileDownloader : Form
 
         // string s = Utils.CalculateMD5FromFile("C:\\downloadedFiles\\image_10.bin");
 
-        (bool result, string content) = await DownloadHelper.GetFileContentAsync(downloadUrl, apiKey);
+        (bool result, string content) = await DownloadHelper.GetFileContentAsync(apiKey, downloadUrl);
 
         // string s2 = Utils.CalculateMD5FromString(content);
 
@@ -723,7 +739,7 @@ public partial class FileDownloader : Form
 
         var lists = DownloadInfo.ParseDownloadInfoFileContent(content);
 
-        // DownloadHelper.WriteToJsonFile<List<DownloadInfo>>(FileDownloader.GetDownloadListSaveFile(), lists.Item3);
+        // Utils.WriteToJsonFile<List<DownloadInfo>>(FileDownloader.GetDownloadListSaveFile(), lists.Item3);
 
         // var myString = "text01.txt,cb08ca4a7bb5f9683c19133a84872ca7,4,0";
         // var (file, checksum, fileSize, forseUpdate) = myString.Split(',') switch { var a => (a[0], a[1], a[2], a[3]) };
@@ -814,10 +830,10 @@ public partial class FileDownloader : Form
             // foreach (var item in resultData)
             // {
             //     string urlDownloadServer = $"{FILE_SERVER_BASE_URL}/{PATCH_FILE_DOWNLOAD_PATH}/{item.fileName}";
-            //     bool isValidUrl = await DownloadHelper.IsDownloadableAsync(urlDownloadServer, apiKey);
+            //     bool isValidUrl = await DownloadHelper.IsDownloadableAsync(apiKey, urlDownloadServer);
 
             //     // string urlDownloadServer__ = $"{FILE_SERVER_BASE_URL}/patch/{item.fileName}";
-            //     long TotalFileSize = await DownloadHelper.GetFileSizeAsync(urlDownloadServer, apiKey);
+            //     long TotalFileSize = await DownloadHelper.GetFileSizeAsync(apiKey, urlDownloadServer);
 
             //     // Console.WriteLine($"{item.version},  {item.fileName}, {item.checksum}, {item.forceUpdate}");
             //     Logger.Log($"version: {item.version},  fileName: {item.fileName}, checksum: {item.checksum}, forceUpdate: {item.forceUpdate}, isdownload: {isValidUrl}");
@@ -845,7 +861,7 @@ public partial class FileDownloader : Form
             //     forceUpdate = true
             // });
 
-            // DownloadHelper.WriteToJsonFile<List<DownloadInfo>>(DEFAULT_DOWNLOAD_FOLDER + "/.myObjects.json", f__);
+            // Utils.WriteToJsonFile<List<DownloadInfo>>(DEFAULT_DOWNLOAD_FOLDER + "/.myObjects.json", f__);
 
             // var v__ = DownloadHelper.ReadFromJsonFile<List<DownloadInfo>>(FileDownloader.GetDownloadListSaveFile());
 
@@ -883,6 +899,79 @@ public partial class FileDownloader : Form
             // // btnTest.Text = textSwitch;
 
             // Logger.Log($"=== {indexSwitch} -> {btnTest.Text}");
+
+
+            // --------- S3             
+
+            string url = "http://localhost:3050/patch/text01.txt";
+            var __v = Utils.ExtractFilePathFromUrl(url);
+
+            string accessKeyId = "___";
+            string secretAccessKey = "___";
+            string bucketFolderName = "test/newest.txt";
+
+            string bucketName = "___";
+            string s3Folder = bucketFolderName;
+
+            using (AmazonS3Client s3Client__ = new AmazonS3Client(accessKeyId, secretAccessKey, RegionEndpoint.APNortheast2))
+            {
+                // var r__ = await DownloadHelperS3.GetFileContentFromAsync(s3Client, bucketName, s3Folder);
+                // Console.WriteLine("content: " + r__);
+
+                // var r2__ = await DownloadHelperS3.IsDownloadableAsync(s3Client, bucketName, s3Folder);
+                // Console.WriteLine("content: " + r2__);
+
+                // var r3__ = await DownloadHelperS3.GetFileSizeAsync(s3Client, bucketName, s3Folder);
+                // Console.WriteLine("content: " + r3__);
+
+                // --------- S3
+                this.OverallProgressBar = new TextProgressBar
+                {
+                    Name = "OverallProgressBar",
+                    Width = 500,
+                    Height = 18,
+                    VisualMode = ProgressBarDisplayMode.Percentage,
+                    Location = new Point(15, 75),
+                    Maximum = 100,
+                    Value = 0,
+                    LastValue = 0
+                };
+
+                CancellationTokenSource cts = new();
+
+                FileDownloaderItem item = new FileDownloaderItem("http://AWS/" + s3Folder, this.DownloadFolder, ServerType.AwsS3);
+
+                item.InitializeTotalBytesReceived();
+
+                // item.InitializeTotalFileSize(this.s3Client, AWS_S3_BUCKET_NAME);
+
+                string s3FilePath = Utils.ExtractFilePathFromUrl(item.Url);
+
+                // await DownloadHelper.GetFileSizeAsync_S3(s3Client__, bucketName, s3FilePath).ContinueWith(task =>
+                // {
+                //     item.TotalFileSize = task.Result;
+                // });
+
+                // item.InitializeTotalFileSize(apiKey);
+                // await DownloadHelperS3.GetFileSizeAsync(s3Client, bucketName, s3Folder).ContinueWith(task =>
+                // {
+                //     item.TotalFileSize = task.Result;
+                // });
+
+                // await DownloadHelperS3.GetFileSizeAsync(s3Client__, bucketName, s3Folder).ContinueWith(task =>
+                // {
+                //     item.TotalFileSize = task.Result;
+                // });
+
+                // item.ProgressUpdated += UpdateOverallProgress;
+                // item.StatusUpdated += (sender, status) => Logger.Log($"[StatusUpdated][{url}] {status}");
+
+                // this.DownloadItems.Add(item);
+
+                // await DownloadHelperS3.DownloadFileAsync(s3Client, bucketName, item, UpdateUI, cts);
+            }
+
+            // --------- S3 
 
             Logger.Log($"===");
         }
