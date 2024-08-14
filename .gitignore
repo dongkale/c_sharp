@@ -63,3 +63,5 @@ __Exec
 
 *.exe
 *.pdb
+
+app.config
